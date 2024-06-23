@@ -1,6 +1,4 @@
 # TOC
-달달하다
-
 ```cpp
 #include <bits/stdc++.h>
 #include <bits/extc++.h>
