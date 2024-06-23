@@ -29,91 +29,180 @@ const int SEMI_INF = 0x3f3f;
 const double PI = acos(-1);
 
 struct node {
-	int value;
-	node *left, *right, *parent;
-	node(int value = 0, node *parent = nullptr, node *left = nullptr , node *right = nullptr) :left(left), right(right), parent(parent), value(value) {}
+	int value, counts = 1, sum = 0, lazy = 0;
+    bool flip = false;
+	node *parent, *left, *right;
+	node(int value = 0, node *left = 0, node *right = 0, node *parent = 0): value(value), right(right), left(left){}
 };
 
 node *root;
 
-void _rotate(node *a) {
-	node *p = a->parent, *temp;
-	if (a == p->left) {
-		temp = p->left = a->right;
-		a->right = p;
+void lazy(node* now) {
+	int& _lazy = now->lazy;
+	now->value += _lazy;
+	if (now->left) {
+		now->left->lazy += _lazy;
+		now->left->value += _lazy * now->left->counts;
+	}
+	if (now->right) {
+		now->right->lazy += _lazy;
+		now->right->lazy += _lazy * now->right->counts;
+	}
+	_lazy = 0;
+	if (!now->flip)return;
+	node* t = now->left;
+	now->left = now->right;
+	now->right = t;
+	now->flip = false;
+	if (now->left) now->left->flip = !now->left->flip;
+	if (now->right) now->right->flip = !now->right->flip;
+}
+
+void updates(node* now) {
+	now->counts = 1;
+	now->sum = now->value;
+	if (now->left) {
+		now->counts += now->left->counts;
+		now->sum += now->left->sum;
+	}
+	if (now->right) {
+		now->counts += now->right->counts;
+		now->sum += now->right->sum;
+	}
+}
+
+void rotates(node *x) {
+	node *p = x->parent, *temp;
+    lazy(p);
+    lazy(x);
+	if (x == p->left) {
+		p->left = temp = x->right;
+		x->right = p;
 	}
 	else {
-		temp = p->right = a->left;
-		a->left = p;
+		p->right = temp = x->left;
+		x->left = p;
 	}
-	a->parent = p->parent;
-	p->parent = a;
+	x->parent = p->parent;
+    p->parent = x;
+	if (temp) temp->parent = p;
+	if (x->parent) {
+		if (p == x->parent->left) x->parent->left = x;
+		else x->parent->right = x;
+	} else root = x;
 
-	if (temp) {
-		temp->parent = p;
-		if (p == a->parent->left) a->parent->left = a;
-		else a->parent->right = a;
-	}
-	else root = a;
+    updates(p);
+    updates(x);
 }
 
-void splay(node *a) {
-	while (a->parent) {
-		if (a->parent->parent) _rotate((a == a->parent->left) == (a->parent == a->parent->parent->left) ? a->parent : a);
-		_rotate(a);
+void splay(node *x) {
+	while (x->parent) {
+		node *g = x->parent->parent, *p = x->parent;
+		if (g) rotates((p->left == x) == (g->left == p) ? p : x);
+		rotates(x);
 	}
 }
 
-bool find(int key) {
-	node *now = root;
-	if (!now) return 0;
-	while (now) {
-		if (key == now->value) break;
-		if (key < now->value) {
-			if (!now->left) break;
-			now = now->left;
+bool find(int n) {
+	node *current = root;
+	if (!current) return false;
+	while (current) {
+		if (n == current->value) break;
+		if (n < current->value) {
+			if (!current->left) break;
+			current = current->left;
 		}
 		else {
-			if (!now->right) break;
-			now = now->right;
+			if (!current->right) break;
+			current = current->right;
 		}
 	}
-	splay(now);
-	return key == now->value;
+	splay(current);
+	return n == current->value;
 }
 
-void _insert(int key, node *previous, node *&now) {
-	if (!now) {
-		now = new node(key, previous);
-		splay(now);
+void deletes(int n) {
+	if (!find(n)) return;
+    
+	node *p = root;
+	if (p->left) {
+		if (p->right) {
+			root = root->left;
+			root->parent = 0;
+			node *current = root;
+			while (current->right) current = current->right;
+			current->right = p->right;
+			p->right->parent = current;
+			splay(current);
+			delete p;
+			return;
+		}
+		root = p->left;
+		root->parent = 0;
+		delete p;
 		return;
 	}
-	if (now->value == key) return;
-	else if (now->value < key) _insert(key, now, now->right);
-	else _insert(key, now, now->left);
+	if (p->right) {
+		root = p->right;
+		root->parent = 0;
+		delete p;
+		return;
+	}
+	delete p;
+	root = 0;
 }
 
-void _delete(int key) {
-	if (!find(key)) return;
-	
-	node *now = root;
-	if (now->left && now->right) {
-		root = now->left;
-		root->parent = nullptr;
-		node *temp = root;
-		while (temp->right) temp = temp->right;
-		temp->right = now->right;
-		now->right->parent = temp;
-		splay(temp);
+void kth(int k) {
+	node* current = root;
+	lazy(current);
+	while (true) {
+		while (current->left && current->left->counts > k) {
+			current = current->left;
+            lazy(current);
+		}
+		if (current->left) k -= current->left->counts;
+		if (!k--) break;
+		current = current->right;
+		lazy(current);
 	}
-	else if (now->left) {
-		root = now->left;
-		root->parent = nullptr;
+	splay(current);
+}
+
+void build(int n) {
+	node* x;
+	root = x = new node();
+	x->counts = n;
+	for (int i = 1; i < n; i++) {
+		x->right = new node();
+		x->right->parent = x;
+		x = x->right;
+		x->counts = n - i;
 	}
-	else if (now->right) {
-		root = now->right;
-		root->parent = nullptr;
-	}
-	delete now;
-	return;
+}
+
+void add(int k, int v) {
+	kth(k);
+	root->sum += v;
+	root->value += v;
+}
+
+void interval(int left, int right) {
+	kth(left - 1);
+	node* current = root;
+	root = current->right;
+	root->parent = 0;
+	kth(right - left + 1);
+	root->parent = current;
+	current->right = root;
+	root = current;
+}
+
+int sum(int left, int right) {
+	interval(left, right);
+	return root->right->left->sum;
+}
+
+void flips(int left, int right) {
+	interval(left, right);
+	root->right->left->flip = !root->right->left->flip;
 }
