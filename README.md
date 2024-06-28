@@ -1,15 +1,17 @@
 # TOC
+구현 한거 뭉탱이로
+
 ```cpp
 #include <bits/stdc++.h>
 #include <bits/extc++.h>
 
 using namespace std;
 using ll = long long;
+using ld = long double;
 using ull = unsigned long long;
 using vint = vector<int>;
 using matrix = vector<vint>;
 using vll = vector<ll>;
-using vull = vector<ull>;
 using matrlx = vector<vll>;
 using fourdimensionalMatrix = vector<matrix>; // ;;
 using pii = pair<int, int>;
@@ -24,9 +26,8 @@ using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gn
 #define endl '\n'
 #define _CRT_SECURE_NO_WARNINGS
 #define all(vec) vec.begin(), vec.end()
-#define rall(vec) vec.rbegin(), vec.rend()
 
 const int INF = 0x3f3f3f3f;
-const int SEMI_INF = 0x3f3f;
+const ll VINF = 2e18;
 const double PI = acos(-1);
 ```
