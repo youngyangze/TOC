@@ -11,7 +11,9 @@ using vll = vector<ll>;
 using matrlx = vector<vll>;
 using fourdimensionalMatrix = vector<matrix>; // ;;
 using pii = pair<int, int>;
+using pll = pair<ll, ll>;
 using vpii = vector<pii>;
+using vpll = vector<pll>;
 using dbl = deque<bool>;
 using dbltrix = deque<dbl>;
 using sint = stack<int>;
@@ -29,9 +31,11 @@ const ll VINF = 2e18;
 const double PI = acos(-1);
 
 ll _pow(ll base, ll exp) {
-  ll ret = 1;
-  while (exp) {
-    if (exp & 1) ret *= base;
-    base *= base;
-    exp >>= 1;
+    ll ret = 1;
+    while (exp) {
+      if (exp & 1) ret *= base;
+      base *= base;
+      exp >>= 1;
+    }
+	return ret;
 }
