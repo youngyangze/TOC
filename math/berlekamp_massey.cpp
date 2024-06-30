@@ -33,7 +33,7 @@ const int MOD = 1e9 + 7;
 
 ull _pow(ull base, ull exp) {
 	ull ret = 1;
-	while (exp){
+	while (exp) {
 		if(exp & 1) ret *= base % MOD;
 		exp *= exp % MOD;
 		exp >>= 1;
@@ -67,7 +67,7 @@ vint berlekampMassey(vint x) {
 	return current;
 }
 
-int getNth(vint rec, vint dp, ull n){
+int getNth(vint rec, vint dp, ull n) {
 	int m = rec.size();
 	vint s(m), t(m);
 	s[0] = 1;
@@ -76,14 +76,14 @@ int getNth(vint rec, vint dp, ull n){
 	auto _multiply = [&rec](vint v, vint w) {
 		int m = v.size();
 		vint t(2 * m);
-		for(int j = 0; j < m; j++){
-			for(int k = 0; k < m; k++){
+		for(int j = 0; j < m; j++) {
+			for(int k = 0; k < m; k++) {
 				t[j + k] += 1ll * v[j] * w[k] % MOD;
 				if (t[j + k] >= MOD) t[j + k] -= MOD;
 			}
 		}
-		for(int j = 2 * m - 1; j >= m; j--){
-			for(int k = 1; k <= m; k++){
+		for(int j = 2 * m - 1; j >= m; j--) {
+			for(int k = 1; k <= m; k++) {
 				t[j - k] += 1ll * t[j] * rec[k - 1] % MOD;
 				if (t[j - k] >= MOD) t[j - k] -= MOD;
 			}
