@@ -1,5 +1,5 @@
 # TOC
-구현 한거 뭉탱이로
+LΛ8YRИTH
 
 ```cpp
 #include <bits/stdc++.h>
