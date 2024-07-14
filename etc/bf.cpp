@@ -91,3 +91,26 @@ void runBrainfuck(const string &program) {
     }
     cout << endl;
 }
+
+int main() {
+    fastio;
+    int t;
+    
+    cin >> t;
+
+    cin.ignore();
+    for (int i = 1; i <= t; i++) {
+        cout << "PROGRAM #" << i << ":" << endl;
+        string line, program;
+        while (getline(cin, line) && line != "end") {
+            size_t commentStart = line.find('%');
+            if (commentStart != string::npos) line = line.substr(0, commentStart);
+            for (char c : line) {
+                if (c == '>' || c == '<' || c == '+' || c == '-' || c == '.' || c == '[' || c == ']') program += c;
+            }
+        }
+        runBrainfuck(program);
+    }
+
+    return 0;
+}
