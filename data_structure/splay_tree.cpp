@@ -95,8 +95,8 @@ private:
     void rotate(node *_node) {
         auto parent = _node->parent;
         node *y;
-        push(parent); push(node);
-        if (node == parent->left) {
+        push(parent); push(_node);
+        if (_node == parent->left) {
             parent->left = y = _node->right;
             _node->right = parent;
         } else {
@@ -104,15 +104,15 @@ private:
             _node->left = parent;
         }
         _node->parent = parent->parent;
-        parent->parent = node;
+        parent->parent = _node;
         if (y) y->parent = parent;
         if (_node->parent) {
-            if (parent == _node->parent->left) _node->parent->left = node;
-            else _node->parent->right = node;
+            if (parent == _node->parent->left) _node->parent->left = _node;
+            else _node->parent->right = _node;
         } else {
-            root = node;
+            root = _node;
         }
-        update(parent); update(node);
+        update(parent); update(_node);
     }
 
     void splay(node *_node, node *goal = nullptr) {
@@ -120,17 +120,17 @@ private:
         while (_node->parent != goal) {
             node *parent = _node->parent;
             if (parent->parent == goal) {
-                rotate(node);
+                rotate(_node);
                 break;
             }
             auto grandparent = parent->parent;
-            if ((parent->left == node) == (grandparent->left == parent)) {
-                rotate(parent); rotate(node);
+            if ((parent->left == _node) == (grandparent->left == parent)) {
+                rotate(parent); rotate(_node);
             } else {
-                rotate(node); rotate(node);
+                rotate(_node); rotate(_node);
             }
         }
-        if (!goal) root = node;
+        if (!goal) root = _node;
     }
 
 public:
@@ -202,7 +202,7 @@ public:
     }
 
     void print(node *_node) {
-        push(node);
+        push(_node);
         if (_node->left) print(_node->left);
         if (!_node->isDummy) cout << _node->value << ' ';
         if (_node->right) print(_node->right);
