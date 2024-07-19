@@ -54,10 +54,17 @@ public:
     }
 };
 
-class SplayTree {
+class splayTree {
 private:
     node *root;
     vector<node*> nodePointers;
+
+public:
+    splayTree() : root(nullptr) {}
+
+    ~splayTree() {
+        if (root) delete root;
+    }
 
     void update(node *_node) {
         _node->size = 1;
@@ -86,15 +93,14 @@ private:
 
     node* gather(int start, int end) {
         kth(end + 1);
-        auto temp = root;
+        node *temp = root;
         kth(start - 1);
         splay(temp, root);
         return root->right->left;
     }
 
     void rotate(node *_node) {
-        auto parent = _node->parent;
-        node *y;
+        node *parent = _node->parent, *y;
         push(parent); push(_node);
         if (_node == parent->left) {
             parent->left = y = _node->right;
@@ -123,7 +129,7 @@ private:
                 rotate(_node);
                 break;
             }
-            auto grandparent = parent->parent;
+            node *grandparent = parent->parent;
             if ((parent->left == _node) == (grandparent->left == parent)) {
                 rotate(parent); rotate(_node);
             } else {
@@ -131,13 +137,6 @@ private:
             }
         }
         if (!goal) root = _node;
-    }
-
-public:
-    SplayTree() : root(nullptr) {}
-
-    ~SplayTree() {
-        if (root) delete root;
     }
 
     void initialize(int n) {
@@ -185,7 +184,7 @@ public:
     }
 
     void kth(int k) {
-        auto current = root;
+        node *current = root;
         push(current);
         while (true) {
             while (current->left && current->left->size > k) {
