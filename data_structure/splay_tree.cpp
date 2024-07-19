@@ -59,29 +59,29 @@ private:
     node *root;
     vector<node*> nodePointers;
 
-    void update(node *node) {
-        node->size = 1;
-        node->sum = node->minValue = node->maxValue = node->value;
-        if (node->left) {
-            node->size += node->left->size;
-            node->sum += node->left->sum;
-            node->minValue = min(node->minValue, node->left->minValue);
-            node->maxValue = max(node->maxValue, node->left->maxValue);
+    void update(node *_node) {
+        _node->size = 1;
+        _node->sum = _node->minValue = _node->maxValue = _node->value;
+        if (_node->left) {
+            _node->size += _node->left->size;
+            _node->sum += _node->left->sum;
+            _node->minValue = min(_node->minValue, _node->left->minValue);
+            _node->maxValue = max(_node->maxValue, _node->left->maxValue);
         }
-        if (node->right) {
-            node->size += node->right->size;
-            node->sum += node->right->sum;
-            node->minValue = min(node->minValue, node->right->minValue);
-            node->maxValue = max(node->maxValue, node->right->maxValue);
+        if (_node->right) {
+            _node->size += _node->right->size;
+            _node->sum += _node->right->sum;
+            _node->minValue = min(_node->minValue, _node->right->minValue);
+            _node->maxValue = max(_node->maxValue, _node->right->maxValue);
         }
     }
 
-    void push(node *node) {
-        if (!node->flip) return;
-        swap(node->left, node->right);
-        if (node->left) node->left->flip = !node->left->flip;
-        if (node->right) node->right->flip = !node->right->flip;
-        node->flip = false;
+    void push(node *_node) {
+        if (!_node->flip) return;
+        swap(_node->left, _node->right);
+        if (_node->left) _node->left->flip = !_node->left->flip;
+        if (_node->right) _node->right->flip = !_node->right->flip;
+        _node->flip = false;
     }
 
     node* gather(int start, int end) {
@@ -92,33 +92,33 @@ private:
         return root->right->left;
     }
 
-    void rotate(node *node) {
-        auto parent = node->parent;
+    void rotate(node *_node) {
+        auto parent = _node->parent;
         node *y;
         push(parent); push(node);
         if (node == parent->left) {
-            parent->left = y = node->right;
-            node->right = parent;
+            parent->left = y = _node->right;
+            _node->right = parent;
         } else {
-            parent->right = y = node->left;
-            node->left = parent;
+            parent->right = y = _node->left;
+            _node->left = parent;
         }
-        node->parent = parent->parent;
+        _node->parent = parent->parent;
         parent->parent = node;
         if (y) y->parent = parent;
-        if (node->parent) {
-            if (parent == node->parent->left) node->parent->left = node;
-            else node->parent->right = node;
+        if (_node->parent) {
+            if (parent == _node->parent->left) _node->parent->left = node;
+            else _node->parent->right = node;
         } else {
             root = node;
         }
         update(parent); update(node);
     }
 
-    void splay(node *node, node *goal = nullptr) {
+    void splay(node *_node, node *goal = nullptr) {
         node *y;
-        while (node->parent != goal) {
-            node *parent = node->parent;
+        while (_node->parent != goal) {
+            node *parent = _node->parent;
             if (parent->parent == goal) {
                 rotate(node);
                 break;
@@ -156,13 +156,13 @@ public:
     }
 
     void flip(int start, int end) {
-        node *node = gather(start, end);
-        node->flip = !node->flip;
+        node *_node = gather(start, end);
+        _node->flip = !_node->flip;
     }
 
     void shift(int start, int end, int k) {
-        node *node = gather(start, end);
-        cout << node->minValue << ' ' << node->maxValue << ' ' << node->sum << endl;
+        node *_node = gather(start, end);
+        cout << _node->minValue << ' ' << _node->maxValue << ' ' << _node->sum << endl;
         if (k >= 0) {
             k %= (end - start + 1);
             if (!k) return;
@@ -201,11 +201,11 @@ public:
         splay(current);
     }
 
-    void print(node *node) {
+    void print(node *_node) {
         push(node);
-        if (node->left) print(node->left);
-        if (!node->isDummy) cout << node->value << ' ';
-        if (node->right) print(node->right);
+        if (_node->left) print(_node->left);
+        if (!_node->isDummy) cout << _node->value << ' ';
+        if (_node->right) print(_node->right);
     }
 
     node* getRoot() {
