@@ -139,7 +139,7 @@ public:
         if (!goal) root = _node;
     }
 
-    void initialize(int n) {
+    void init(int n) {
         if (root) delete root;
         root = new node(-INF);
         auto current = root;
