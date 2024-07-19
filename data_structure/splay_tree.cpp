@@ -3,6 +3,7 @@
 
 using namespace std;
 using ll = long long;
+using ld = long double;
 using ull = unsigned long long;
 using vint = vector<int>;
 using matrix = vector<vint>;
@@ -11,7 +12,9 @@ using vull = vector<ull>;
 using matrlx = vector<vll>;
 using fourdimensionalMatrix = vector<matrix>; // ;;
 using pii = pair<int, int>;
+using pll = pair<ll, ll>;
 using vpii = vector<pii>;
+using vpll = vector<pll>;
 using dbl = deque<bool>;
 using dbltrix = deque<dbl>;
 using sint = stack<int>;
@@ -25,184 +28,187 @@ using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gn
 #define rall(vec) vec.rbegin(), vec.rend()
 
 const int INF = 0x3f3f3f3f;
-const int SEMI_INF = 0x3f3f;
+const ll VINF = 2e18;
 const double PI = acos(-1);
 
-struct node {
-	int value, counts = 1, sum = 0, lazy = 0;
-    bool flip = false;
-	node *parent, *left, *right;
-	node(int value = 0, node *left = 0, node *right = 0, node *parent = 0): value(value), right(right), left(left){}
+class node {
+public:
+    node *left, *right, *parent;
+    ll value, size, sum, maxValue, minValue;
+    bool isDummy, flip;
+
+    node(ll n, node *par) : value(n), parent(par) {
+        left = right = nullptr;
+        sum = maxValue = minValue = n;
+        size = 1;
+        isDummy = false;
+        flip = false;
+    }
+
+    node(int n) : node(n, nullptr) {}
+    node() : node(0) {}
+
+    ~node() {
+        if (left) delete left;
+        if (right) delete right;
+    }
 };
 
-node *root;
+class SplayTree {
+private:
+    node *root;
+    vector<node*> nodePointers;
 
-void lazy(node* now) {
-	int& _lazy = now->lazy;
-	now->value += _lazy;
-	if (now->left) {
-		now->left->lazy += _lazy;
-		now->left->value += _lazy * now->left->counts;
-	}
-	if (now->right) {
-		now->right->lazy += _lazy;
-		now->right->lazy += _lazy * now->right->counts;
-	}
-	_lazy = 0;
-	if (!now->flip)return;
-	node* t = now->left;
-	now->left = now->right;
-	now->right = t;
-	now->flip = false;
-	if (now->left) now->left->flip = !now->left->flip;
-	if (now->right) now->right->flip = !now->right->flip;
-}
+    void update(node *node) {
+        node->size = 1;
+        node->sum = node->minValue = node->maxValue = node->value;
+        if (node->left) {
+            node->size += node->left->size;
+            node->sum += node->left->sum;
+            node->minValue = min(node->minValue, node->left->minValue);
+            node->maxValue = max(node->maxValue, node->left->maxValue);
+        }
+        if (node->right) {
+            node->size += node->right->size;
+            node->sum += node->right->sum;
+            node->minValue = min(node->minValue, node->right->minValue);
+            node->maxValue = max(node->maxValue, node->right->maxValue);
+        }
+    }
 
-void updates(node* now) {
-	now->counts = 1;
-	now->sum = now->value;
-	if (now->left) {
-		now->counts += now->left->counts;
-		now->sum += now->left->sum;
-	}
-	if (now->right) {
-		now->counts += now->right->counts;
-		now->sum += now->right->sum;
-	}
-}
+    void push(node *node) {
+        if (!node->flip) return;
+        swap(node->left, node->right);
+        if (node->left) node->left->flip = !node->left->flip;
+        if (node->right) node->right->flip = !node->right->flip;
+        node->flip = false;
+    }
 
-void rotates(node *x) {
-	node *p = x->parent, *temp;
-    lazy(p);
-    lazy(x);
-	if (x == p->left) {
-		p->left = temp = x->right;
-		x->right = p;
-	}
-	else {
-		p->right = temp = x->left;
-		x->left = p;
-	}
-	x->parent = p->parent;
-    p->parent = x;
-	if (temp) temp->parent = p;
-	if (x->parent) {
-		if (p == x->parent->left) x->parent->left = x;
-		else x->parent->right = x;
-	} else root = x;
+    node* gather(int start, int end) {
+        kth(end + 1);
+        auto temp = root;
+        kth(start - 1);
+        splay(temp, root);
+        return root->right->left;
+    }
 
-    updates(p);
-    updates(x);
-}
+    void rotate(node *node) {
+        auto parent = node->parent;
+        node *y;
+        push(parent); push(node);
+        if (node == parent->left) {
+            parent->left = y = node->right;
+            node->right = parent;
+        } else {
+            parent->right = y = node->left;
+            node->left = parent;
+        }
+        node->parent = parent->parent;
+        parent->parent = node;
+        if (y) y->parent = parent;
+        if (node->parent) {
+            if (parent == node->parent->left) node->parent->left = node;
+            else node->parent->right = node;
+        } else {
+            root = node;
+        }
+        update(parent); update(node);
+    }
 
-void splay(node *x) {
-	while (x->parent) {
-		node *g = x->parent->parent, *p = x->parent;
-		if (g) rotates((p->left == x) == (g->left == p) ? p : x);
-		rotates(x);
-	}
-}
+    void splay(node *node, node *goal = nullptr) {
+        node *y;
+        while (node->parent != goal) {
+            node *parent = node->parent;
+            if (parent->parent == goal) {
+                rotate(node);
+                break;
+            }
+            auto grandparent = parent->parent;
+            if ((parent->left == node) == (grandparent->left == parent)) {
+                rotate(parent); rotate(node);
+            } else {
+                rotate(node); rotate(node);
+            }
+        }
+        if (!goal) root = node;
+    }
 
-bool find(int n) {
-	node *current = root;
-	if (!current) return false;
-	while (current) {
-		if (n == current->value) break;
-		if (n < current->value) {
-			if (!current->left) break;
-			current = current->left;
-		}
-		else {
-			if (!current->right) break;
-			current = current->right;
-		}
-	}
-	splay(current);
-	return n == current->value;
-}
+public:
+    SplayTree() : root(nullptr) {}
 
-void deletes(int n) {
-	if (!find(n)) return;
-    
-	node *p = root;
-	if (p->left) {
-		if (p->right) {
-			root = root->left;
-			root->parent = 0;
-			node *current = root;
-			while (current->right) current = current->right;
-			current->right = p->right;
-			p->right->parent = current;
-			splay(current);
-			delete p;
-			return;
-		}
-		root = p->left;
-		root->parent = 0;
-		delete p;
-		return;
-	}
-	if (p->right) {
-		root = p->right;
-		root->parent = 0;
-		delete p;
-		return;
-	}
-	delete p;
-	root = 0;
-}
+    ~SplayTree() {
+        if (root) delete root;
+    }
 
-void kth(int k) {
-	node* current = root;
-	lazy(current);
-	while (true) {
-		while (current->left && current->left->counts > k) {
-			current = current->left;
-            lazy(current);
-		}
-		if (current->left) k -= current->left->counts;
-		if (!k--) break;
-		current = current->right;
-		lazy(current);
-	}
-	splay(current);
-}
+    void initialize(int n) {
+        if (root) delete root;
+        root = new node(-INF);
+        auto current = root;
+        nodePointers.resize(n + 1);
+        for (int i = 1; i <= n; i++) {
+            nodePointers[i] = current->right = new node(i, current);
+            current = current->right;
+        }
+        current->right = new node(INF, current);
+        root->isDummy = current->right->isDummy = true;
+        for (int i = n; i >= 1; i--) update(nodePointers[i]);
+        splay(nodePointers[n >> 1]);
+    }
 
-void build(int n) {
-	node* x;
-	root = x = new node();
-	x->counts = n;
-	for (int i = 1; i < n; i++) {
-		x->right = new node();
-		x->right->parent = x;
-		x = x->right;
-		x->counts = n - i;
-	}
-}
+    void flip(int start, int end) {
+        node *node = gather(start, end);
+        node->flip = !node->flip;
+    }
 
-void add(int k, int v) {
-	kth(k);
-	root->sum += v;
-	root->value += v;
-}
+    void shift(int start, int end, int k) {
+        node *node = gather(start, end);
+        cout << node->minValue << ' ' << node->maxValue << ' ' << node->sum << endl;
+        if (k >= 0) {
+            k %= (end - start + 1);
+            if (!k) return;
+            flip(start, end);
+            flip(start, start + k - 1);
+            flip(start + k, end);
+        } else {
+            k *= -1;
+            k %= (end - start + 1);
+            if (!k) return;
+            flip(start, end);
+            flip(start, end - k);
+            flip(end - k + 1, end);
+        }
+    }
 
-void interval(int left, int right) {
-	kth(left - 1);
-	node* current = root;
-	root = current->right;
-	root->parent = 0;
-	kth(right - left + 1);
-	root->parent = current;
-	current->right = root;
-	root = current;
-}
+    void getIndex(int k) {
+        splay(nodePointers[k]);
+        cout << root->left->size << endl;
+    }
 
-int sum(int left, int right) {
-	interval(left, right);
-	return root->right->left->sum;
-}
+    void kth(int k) {
+        auto current = root;
+        push(current);
+        while (true) {
+            while (current->left && current->left->size > k) {
+                current = current->left;
+                push(current);
+            }
+            if (current->left) k -= current->left->size;
+            if (!k) break;
+            k--;
+            current = current->right;
+            push(current);
+        }
+        splay(current);
+    }
 
-void flips(int left, int right) {
-	interval(left, right);
-	root->right->left->flip = !root->right->left->flip;
-}
+    void print(node *node) {
+        push(node);
+        if (node->left) print(node->left);
+        if (!node->isDummy) cout << node->value << ' ';
+        if (node->right) print(node->right);
+    }
+
+    node* getRoot() {
+        return root;
+    }
+};
