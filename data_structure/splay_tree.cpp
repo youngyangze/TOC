@@ -200,6 +200,22 @@ public:
         splay(current);
     }
 
+    void add(int k, int n) {
+        kth(k);
+        node *_parent = root, *current = new node(n, root);
+        _parent->left->parent = x;
+        current->left = _parent->left;
+        _parent->left = current;
+        splay(current);
+    }
+
+    void remove(int k) {
+        node *_node = gather(k, k);
+        _node->parent->left = nullptr;
+        splay(_node->parent);
+        delete _node;
+    }
+
     void print(node *_node) {
         push(_node);
         if (_node->left) print(_node->left);
