@@ -203,7 +203,7 @@ public:
     void add(int k, int n) {
         kth(k);
         node *_parent = root, *current = new node(n, root);
-        _parent->left->parent = x;
+        _parent->left->parent = current;
         current->left = _parent->left;
         _parent->left = current;
         splay(current);
