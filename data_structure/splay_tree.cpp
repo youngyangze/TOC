@@ -41,6 +41,10 @@ struct node {
         return this == parent->left;
     }
 
+	bool isRight() const {
+		return this == parent->right;
+	}
+
     void rotate() {
         if (isLeft()) {
             if (right) right->parent = parent;
@@ -55,7 +59,7 @@ struct node {
             if (parent->isLeft()) parent->parent->left = this;
             else parent->parent->right = this;
         }
-        auto temp = parent;
+        node *temp = parent;
         parent = temp->parent;
         temp->parent = this;
         temp->update();
@@ -174,4 +178,20 @@ public:
             flip(l + k, r);
         }
     }
+
+	void insert(int k, int value) {
+		kth(k);
+		node *_root = root, *temp = new node(value, root);
+		_root->left->parent = temp;
+		temp->left = _root->left;
+		_root->left = temp;
+		splay(temp);
+	}
+
+	void erase(int k) {
+		node *temp = gather(k, k);
+		temp->parent->left = nullptr;
+		splay(temp->parent);
+		delete temp;
+	}
 };
