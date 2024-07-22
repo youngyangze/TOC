@@ -1,5 +1,5 @@
 # TOC
-LΛ8YRИTH
+**스플레이 트리 구현 진짜 열받게 하는데 그냥 구현 다 때려박을거임 ㅅㄱ**
 
 ```cpp
 #include <bits/stdc++.h>
