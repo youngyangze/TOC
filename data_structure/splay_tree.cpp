@@ -3,11 +3,17 @@
 
 using namespace std;
 using ll = long long;
-using vll = vector<ll>;
+using ull = unsigned long long;
 using vint = vector<int>;
 using matrix = vector<vint>;
+using vll = vector<ll>;
+using vull = vector<ull>;
+using matrlx = vector<vll>;
+using fourdimensionalMatrix = vector<matrix>; // ;;
 using pii = pair<int, int>;
 using vpii = vector<pii>;
+using dbl = deque<bool>;
+using dbltrix = deque<dbl>;
 using sint = stack<int>;
 using tii = tuple<int, int, int>;
 using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
@@ -16,34 +22,30 @@ using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gn
 #define endl '\n'
 #define _CRT_SECURE_NO_WARNINGS
 #define all(vec) vec.begin(), vec.end()
+#define rall(vec) vec.rbegin(), vec.rend()
 
 const int INF = 0x3f3f3f3f;
+const int SEMI_INF = 0x3f3f;
 const double PI = acos(-1);
-const int MOD = 1e9 + 7;
 
 struct node {
-    node *left, *right, *parent;
+    node* left, *right, *parent;
     ll size, value, sum, maxValue, minValue;
     bool flip, dummy;
 
-    node(ll value = 0, node *parent = nullptr) : value(value), sum(value), maxValue(value), minValue(value), parent(parent) {
+    node() : node(0) {}
+    node(ll value) : node(value, nullptr) {}
+    node(ll value, node *parent) : value(value), sum(value), maxValue(value), minValue(value), parent(parent) {
         left = right = nullptr;
         size = 1;
         flip = dummy = false;
     }
-
     ~node() {
-        delete left;
-        delete right;
+        if (left) delete left;
+        if (right) delete right;
     }
 
-    bool isLeft() const {
-        return this == parent->left;
-    }
-
-	bool isRight() const {
-		return this == parent->right;
-	}
+    bool isLeft() const {return this == parent->left;}
 
     void rotate() {
         if (isLeft()) {
@@ -83,6 +85,11 @@ struct node {
         }
     }
 
+    void updateValue(int value) {
+        value = value;
+        update();
+    }
+
     void push() {
         if (flip) {
             swap(left, right);
@@ -94,27 +101,27 @@ struct node {
 };
 
 class splayTree {
-public:
     node *root;
     vector<node*> nodes;
 
-    splayTree() : root(nullptr) {
-        nodes.resize(101010, nullptr);
-    }
+public:
+    splayTree() : root(nullptr) {}
 
     ~splayTree() {
         if (root) delete root;
     }
 
-    void splay(node *x, node *p = nullptr) {
-        for (; x->parent != p; x->rotate()) {
-            if (x->parent->parent != p) x->parent->parent->push();
-            x->parent->push();
-            x->push();
-            if (x->parent->parent != p) (x->isLeft() ^ x->parent->isLeft() ? x : x->parent)->rotate();
+    void splay(node *_node, node *targetParent = nullptr) {
+        while (_node->parent != targetParent) {
+            if (_node->parent->parent != targetParent) _node->parent->parent->push();
+            _node->parent->push();
+            _node->push();
+            if (_node->parent->parent == targetParent) continue;
+            if (_node->isLeft() == _node->parent->isLeft()) _node->parent->rotate();
+            else _node->rotate();
         }
-        if (!p) root = x;
-        x->push();
+        _node->push();
+        if (!targetParent) root = _node;
     }
 
     void kth(int k) {
@@ -133,53 +140,67 @@ public:
         splay(current);
     }
 
-    node *gather(int l, int r) {
-        kth(r + 1);
-        auto temp = root;
-        kth(l - 1);
+    node *gather(int left, int right) {
+        kth(right + 1);
+        node *temp = root;
+        kth(left - 1);
         splay(temp, root);
         return root->right->left;
     }
 
-    void init(int n) {
+    void init(const vint &values) {
         if (root) delete root;
         root = new node(-INF);
-        root->dummy = true;
-        auto current = root;
+        int n = values.size();
+        node *current = root;
+        for (int i = 1; i <= n; i++) {
+            nodes[i] = current->right = new node(values[i - 1], current);
+            current = current->right;
+        }
+        current->right = new node(INF, current);
+        for (int i = n; i >= 1; i--) nodes[i]->update();
+        splay(nodes[(n + 1) >> 1]);
+    }
+
+    void _init(const int &n) {
+        if (root) delete root;
+        root = new node(-INF);
+        node *current = root;
         for (int i = 1; i <= n; i++) {
             nodes[i] = current->right = new node(i, current);
             current = current->right;
         }
         current->right = new node(INF, current);
-        current->right->dummy = true;
         for (int i = n; i >= 1; i--) nodes[i]->update();
-        splay(nodes[n + 1 >> 1]);
+        splay(nodes[(n + 1) >> 1]);
     }
 
-    void print(node *x) {
-        x->push();
-        if (x->left) print(x->left);
-        if (!x->dummy) cout << x->value << ' ';
-        if (x->right) print(x->right);
+    void print(node *_node) {
+        _node->push();
+        if (_node->left) print(_node->left);
+        if (abs(_node->value) != INF) cout << _node->value << ' ';
+        if (_node->right) print(_node->right);
     }
 
-    void flip(int l, int r) {
-        node *temp = gather(l, r);
-        temp->flip ^= 1;
+    void flip(int left, int right) {
+        node *target = gather(left, right);
+        target->flip ^= 1;
     }
 
-    void shift(int l, int r, int k) {
-        gather(l, r);
-        k %= r - l + 1;
-        if (k < 0) k += r - l + 1;
+    void shift(int left, int right, int k) {
+        gather(left, right);
+        k %= right - left + 1;
+        if (k < 0) k += right - left + 1;
         if (k) {
-            flip(l, r);
-            flip(l, l + k - 1);
-            flip(l + k, r);
+            flip(left, right);
+            flip(left, left + k - 1);
+            flip(left + k, right);
         }
     }
 
-	void insert(int k, int value) {
+    void getIndex(int k) {splay(nodes[k]);}
+
+    void insert(int k, int value) {
 		kth(k);
 		node *_root = root, *temp = new node(value, root);
 		_root->left->parent = temp;
