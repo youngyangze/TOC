@@ -112,7 +112,7 @@ public:
     }
 
     void splay(node *_node, node *targetParent = nullptr) {
-        while (_node->parent != targetParent) {
+        for (; _node->parent != targetParent; _node->rotate()) {
             if (_node->parent->parent != targetParent) _node->parent->parent->push();
             _node->parent->push();
             _node->push();
