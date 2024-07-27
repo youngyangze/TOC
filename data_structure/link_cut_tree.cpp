@@ -184,10 +184,10 @@ public:
         _ll ret = lca->value;
         access(a);
         splay(lca);
-        if (lca->right) ret += lca->right->sum;
+        if (lca->right) ret = ret + lca->right->sum;
         access(b);
         splay(lca);
-        if (lca->right) ret += lca->right->sum;
+        if (lca->right) ret = ret + lca->right->sum;
         return ret;
     }
 };
