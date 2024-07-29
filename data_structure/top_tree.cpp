@@ -41,9 +41,8 @@ struct node {
     int parent;
     bool reversed;
     int value, subtreeRoot, stackPlus, chainPlus, stackMake, chainMake, chainSum, stackSum, chainMax, chainMin, stackMax, stackMin, size, dSize;
-};
+} nodes[MAX_N];
 
-node nodes[MAX_N];
 int _stack[MAX_N];
 int treeTop = 0, _treeRoot, stackTop = -1;
 
@@ -381,73 +380,8 @@ void link(int a, int b) {
     update(b);
 }
 
-void _makeTree(int currentNode, int value) {
-    access(currentNode);
-    int temp = getPrevious(currentNode);
-    if (temp) splay(temp);
-    makeTree(currentNode, value);
-    makeChain(currentNode, value);
-    if (temp) update(temp);
-}
-
-void _makeChain(int a, int b, int value) {
-    makeRoot(a);
-    makeChain(access(b), value);
-}
-
-void plusTree(int currentNode, int value) {
-    access(currentNode);
-    splay(currentNode);
-    int temp = getPrevious(currentNode);
-    if (temp) splay(temp);
-    stackPlus(currentNode, value);
-    chainPlus(currentNode, value);
-    if (temp) update(temp);
-}
-
-void plusChain(int a, int b, int value) {
-    makeRoot(a);
-    chainPlus(access(b), value);
-}
-
 bool isSame(int a, int b) {
     while (nodes[a].parent) a = nodes[a].parent;
     while (nodes[b].parent) b = nodes[b].parent;
     return a == b;
-}
-
-int sumChain(int a, int b) {
-    makeRoot(a);
-    return nodes[access(b)].chainSum;
-}
-
-int maxChain(int a, int b) {
-    makeRoot(a);
-    return nodes[access(b)].chainMax;
-}
-
-int minChain(int a, int b) {
-    makeRoot(a);
-    return nodes[access(b)].chainMin;
-}
-
-int sumQuery(int a) {
-    access(a);
-    int temp = getPrevious(a);
-    if (temp) splay(temp);
-    return nodes[a].stackSum + nodes[a].chainSum;
-}
-
-int maxQuery(int a) {
-    access(a);
-    int temp = getPrevious(a);
-    if (temp) splay(temp);
-    return max(nodes[a].chainMax, nodes[a].stackMax);
-}
-
-int minQuery(int a) {
-    access(a);
-    int temp = getPrevious(a);
-    if (temp) splay(temp);
-    return min(nodes[a].chainMin, nodes[a].stackMin);
 }
