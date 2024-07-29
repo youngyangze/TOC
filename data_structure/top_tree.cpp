@@ -29,75 +29,75 @@ using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gn
 const int INF = 0x3f3f3f3f;
 const ll VINF = 2e18;
 const double PI = acos(-1);
-const int MAX_N = 1e5 + 1;
 
-void makeTree(const int &currentNode, const int &value);
-void makeChain(const int &currentNode, const int &value);
-void s(const int &currentNode, const int &value);
-void c(const int &currentNode, const int &value);
+void makeTree(int currentNode, int _value);
+void makeChain(int currentNode, int _value);
+void stackPlus(int currentNode, int _value);
+void chainPlus(int currentNode, int _value);
 
 struct node {
     int children[2];
-    int parent, value, subtreeRoot, stackPlus, chainPlus, stackMake, chainMake, chainSum, stackSum, chainMax, chainMin, stackMax, stackMin, size, dSize;
+    int parent;
     bool reversed;
-} treeNodes[MAX_N];
+    int value, subtreeRoot, stackPlus, chainPlus, stackMake, chainMake, chainSum, stackSum, chainMax, chainMin, stackMax, stackMin, size, dSize;
+} nodes[MAX_N];
 
-int treeTop = 0;
+vint _stack(MAX_N), stackTop = -1;
+int treeTop = 0, _treeRoot;
 
 struct splayTree {
-    vint left, right, subtreeSize, values, group, valueMax, valueMin, sum, size, plus, makeValue, stack;
+    vint left(MAX_N), right(MAX_N), subtreeRoot(MAX_N), values(MAX_N), groups(MAX_N), valueMax(MAX_N), valueMin(MAX_N), sum(MAX_N), size(MAX_N), plus(MAX_N), makeValue(MAX_N), _stack(MAX_N);
     int treeTop, stackTop;
-
     splayTree() {
         stackTop = -1;
         treeTop = 0;
-        valueMax.assign(MAX_N, -INF);
-        valueMin.assign(MAX_N, INF);
+        valueMax[0] = -INF;
+        valueMin[0] = INF;
     }
 
-    void update(const int &currentNode) {
-        valueMax[currentNode] = max({treeNodes[values[currentNode]].chainMax, treeNodes[values[currentNode]].stackMax, valueMax[left[currentNode]], valueMax[right[currentNode]]});
-        valueMin[currentNode] = min({treeNodes[values[currentNode]].chainMin, treeNodes[values[currentNode]].stackMin, valueMin[left[currentNode]], valueMin[right[currentNode]]});
-        sum[currentNode] = sum[left[currentNode]] + sum[right[currentNode]] + treeNodes[values[currentNode]].stackSum + treeNodes[values[currentNode]].chainSum;
-        size[currentNode] = size[left[currentNode]] + size[right[currentNode]] + treeNodes[values[currentNode]].size + treeNodes[values[currentNode]].dSize;
-        subtreeSize[currentNode] = subtreeSize[left[currentNode]] + subtreeSize[right[currentNode]] + 1;
+    void update(int currentNode) {
+        valueMax[currentNode] = max(max(nodes[values[currentNode]].chainMax, nodes[values[currentNode]].stackMax), max(valueMax[left[currentNode]], valueMax[right[currentNode]]));
+        valueMin[currentNode] = min(min(nodes[values[currentNode]].chainMin, nodes[values[currentNode]].stackMin), min(valueMin[left[currentNode]], valueMin[right[currentNode]]));
+        sum[currentNode] = sum[left[currentNode]] + sum[right[currentNode]] + nodes[values[currentNode]].stackSum + nodes[values[currentNode]].chainSum;
+        size[currentNode] = size[left[currentNode]] + size[right[currentNode]] + nodes[values[currentNode]].size + nodes[values[currentNode]].dSize;
+        subtreeRoot[currentNode] = subtreeRoot[left[currentNode]] + subtreeRoot[right[currentNode]] + 1;
     }
 
-    void applyMakeValue(const int &currentNode, const int &value) {
-        makeValue[currentNode] = value;
-        sum[currentNode] = value * size[currentNode];
+    void applyMakeValue(int currentNode, int _value) {
+        makeValue[currentNode] = _value;
+        sum[currentNode] = _value * size[currentNode];
         plus[currentNode] = 0;
-        valueMax[currentNode] = valueMin[currentNode] = value;
+        valueMax[currentNode] = valueMin[currentNode] = _value;
     }
 
-    void applyAddValue(const int &currentNode, const int &delta) {
+    void applyAddValue(int currentNode, int delta) {
         valueMax[currentNode] += delta;
         valueMin[currentNode] += delta;
         sum[currentNode] += delta * size[currentNode];
         plus[currentNode] += delta;
     }
 
-    void propagate(const int &currentNode) {
+    void propagate(int currentNode) {
         if (makeValue[currentNode] != INF) {
-            applyMakeValue(values[currentNode], makeValue[currentNode]);
+            makeTree(values[currentNode], makeValue[currentNode]);
             makeChain(values[currentNode], makeValue[currentNode]);
             if (left[currentNode]) applyMakeValue(left[currentNode], makeValue[currentNode]);
             if (right[currentNode]) applyMakeValue(right[currentNode], makeValue[currentNode]);
             makeValue[currentNode] = INF;
         }
         if (plus[currentNode]) {
-            s(values[currentNode], plus[currentNode]);
-            c(values[currentNode], plus[currentNode]);
+            stackPlus(values[currentNode], plus[currentNode]);
+            chainPlus(values[currentNode], plus[currentNode]);
             if (left[currentNode]) applyAddValue(left[currentNode], plus[currentNode]);
             if (right[currentNode]) applyAddValue(right[currentNode], plus[currentNode]);
             plus[currentNode] = 0;
         }
     }
 
-    void rotateLeft(int &currentNode) {
+    void leftRotate(int &currentNode) {
         propagate(currentNode);
         propagate(right[currentNode]);
-        const int temp = right[currentNode];
+        int temp = right[currentNode];
         right[currentNode] = left[temp];
         update(currentNode);
         left[temp] = currentNode;
@@ -105,10 +105,10 @@ struct splayTree {
         currentNode = temp;
     }
 
-    void rotateRight(int &currentNode) {
+    void rightRotate(int &currentNode) {
         propagate(currentNode);
         propagate(left[currentNode]);
-        const int temp = left[currentNode];
+        int temp = left[currentNode];
         left[currentNode] = right[temp];
         update(currentNode);
         right[temp] = currentNode;
@@ -117,65 +117,64 @@ struct splayTree {
     }
 
     void maintain(int &currentNode) {
-        if (subtreeSize[left[left[currentNode]]] > subtreeSize[right[currentNode]]) {
-            rotateRight(currentNode);
+        if (subtreeRoot[left[left[currentNode]]] > subtreeRoot[right[currentNode]]) {
+            rightRotate(currentNode);
             maintain(left[currentNode]);
             maintain(right[currentNode]);
             maintain(currentNode);
         }
-        if (subtreeSize[right[right[currentNode]]] > subtreeSize[left[currentNode]]) {
-            rotateLeft(currentNode);
+        if (subtreeRoot[right[right[currentNode]]] > subtreeRoot[left[currentNode]]) {
+            leftRotate(currentNode);
             maintain(left[currentNode]);
             maintain(right[currentNode]);
             maintain(currentNode);
         }
-        if (subtreeSize[left[right[currentNode]]] > subtreeSize[left[currentNode]]) {
-            rotateRight(right[currentNode]);
-            rotateLeft(currentNode);
+        if (subtreeRoot[left[right[currentNode]]] > subtreeRoot[left[currentNode]]) {
+            rightRotate(right[currentNode]);
+            leftRotate(currentNode);
             maintain(left[currentNode]);
             maintain(right[currentNode]);
             maintain(currentNode);
         }
-        if (subtreeSize[right[left[currentNode]]] > subtreeSize[right[currentNode]]) {
-            rotateLeft(left[currentNode]);
-            rotateRight(currentNode);
+        if (subtreeRoot[right[left[currentNode]]] > subtreeRoot[right[currentNode]]) {
+            leftRotate(left[currentNode]);
+            rightRotate(currentNode);
             maintain(right[currentNode]);
             maintain(left[currentNode]);
             maintain(currentNode);
         }
     }
 
-    void insert(int &currentNode, const int &value, int id) {
+    void insert(int &currentNode, int value, int address) {
         if (!currentNode) {
             if (stackTop == -1) currentNode = ++treeTop;
-            else currentNode = stack[stackTop--];
+            else currentNode = _stack[stackTop--];
             left[currentNode] = right[currentNode] = 0;
             values[currentNode] = value;
-            group[currentNode] = id;
+            groups[currentNode] = address;
             makeValue[currentNode] = INF;
             plus[currentNode] = 0;
             update(currentNode);
             return;
         }
         propagate(currentNode);
-        if (value < values[currentNode]) insert(left[currentNode], value, id);
-        else insert(right[currentNode], value, id);
+        if (value < values[currentNode]) insert(left[currentNode], value, address);
+        else insert(right[currentNode], value, address);
         update(currentNode);
         maintain(currentNode);
     }
 
-    void erase(int &currentNode, const int &value) {
-        assert(currentNode);
+    void erase(int &currentNode, int value) {
         propagate(currentNode);
         if (value == values[currentNode]) {
             if (!left[currentNode]) {
-                stack[++stackTop] = currentNode;
+                _stack[++stackTop] = currentNode;
                 currentNode = right[currentNode];
             } else if (!right[currentNode]) {
-                stack[++stackTop] = currentNode;
+                _stack[++stackTop] = currentNode;
                 currentNode = left[currentNode];
             } else {
-                rotateLeft(currentNode);
+                leftRotate(currentNode);
                 erase(left[currentNode], value);
                 update(currentNode);
                 maintain(currentNode);
@@ -188,7 +187,7 @@ struct splayTree {
         maintain(currentNode);
     }
 
-    int find(int &currentNode, const int &value) {
+    int find(int &currentNode, int value) {
         if (value == values[currentNode]) {
             propagate(currentNode);
             return currentNode;
@@ -197,264 +196,257 @@ struct splayTree {
         if (value < values[currentNode]) return find(left[currentNode], value);
         else return find(right[currentNode], value);
     }
-};
+} bst;
 
-class topTree {
-public:
-    splayTree bst;
-    matrix edge;
-    vint stack;
-    int tops = -1, troot = 0;
+matrix edge(MAX_N, vint(2));
 
-    topTree() {
-        edge.resize(MAX_N, vint(2));
-        stack.resize(MAX_N);
+
+bool isRoot(int currentNode) {return !nodes[currentNode].parent || (nodes[nodes[currentNode].parent].children[0] != currentNode && nodes[nodes[currentNode].parent].children[1] != currentNode);}
+
+void update(int currentNode) {
+    nodes[currentNode].chainMax = max(nodes[currentNode].value, max(nodes[nodes[currentNode].children[0]].chainMax, nodes[nodes[currentNode].children[1]].chainMax));
+    nodes[currentNode].chainMin = min(nodes[currentNode].value, min(nodes[nodes[currentNode].children[1]].chainMin, nodes[nodes[currentNode].children[0]].chainMin));
+    nodes[currentNode].chainSum = nodes[currentNode].value + nodes[nodes[currentNode].children[0]].chainSum + nodes[nodes[currentNode].children[1]].chainSum;
+    nodes[currentNode].stackMax = max(bst.valueMax[nodes[currentNode].subtreeRoot], max(nodes[nodes[currentNode].children[0]].stackMax, nodes[nodes[currentNode].children[1]].stackMax));
+    nodes[currentNode].stackMin = min(bst.valueMin[nodes[currentNode].subtreeRoot], min(nodes[nodes[currentNode].children[1]].stackMin, nodes[nodes[currentNode].children[0]].stackMin));
+    nodes[currentNode].stackSum = bst.sum[nodes[currentNode].subtreeRoot] + nodes[nodes[currentNode].children[0]].stackSum + nodes[nodes[currentNode].children[1]].stackSum;
+    nodes[currentNode].size = bst.size[nodes[currentNode].subtreeRoot] + nodes[nodes[currentNode].children[0]].size + nodes[nodes[currentNode].children[1]].size;
+    nodes[currentNode].dSize = 1 + nodes[nodes[currentNode].children[0]].dSize + nodes[nodes[currentNode].children[1]].dSize;
+}
+
+void _reverse(int currentNode) {
+    nodes[currentNode].reversed ^= 1;
+    swap(nodes[currentNode].children[0], nodes[currentNode].children[1]);
+}
+
+void makeTree(int currentNode, int _value) {
+    nodes[currentNode].stackMake = _value;
+    nodes[currentNode].stackPlus = 0;
+    if (nodes[currentNode].size) {
+        if (nodes[currentNode].subtreeRoot) bst.applyMakeValue(nodes[currentNode].subtreeRoot, _value);
+        nodes[currentNode].stackMax = nodes[currentNode].stackMin = _value;
+        nodes[currentNode].stackSum = _value * nodes[currentNode].size;
     }
+}
 
-    bool isRoot(const int &current) {
-        return !topTreeNodes[current].parent || (topTreeNodes[topTreeNodes[current].parent].children[0] != current && topTreeNodes[topTreeNodes[current].parent].children[1] != current);
-    }
+void stackPlus(int currentNode, int _value) {
+    nodes[currentNode].stackPlus += _value;
+    nodes[currentNode].stackSum += _value * nodes[currentNode].size;
+    nodes[currentNode].stackMax += _value;
+    nodes[currentNode].stackMin += _value;
+    if (nodes[currentNode].subtreeRoot) bst.applyAddValue(nodes[currentNode].subtreeRoot, _value);
+}
 
-    void update(const int &current) {
-        topTreeNodes[current].chainMax = max(topTreeNodes[current].value, max(topTreeNodes[topTreeNodes[current].children[0]].chainMax, topTreeNodes[topTreeNodes[current].children[1]].chainMax));
-        topTreeNodes[current].chainMin = min(topTreeNodes[current].value, min(topTreeNodes[topTreeNodes[current].children[1]].chainMin, topTreeNodes[topTreeNodes[current].children[0]].chainMin));
-        topTreeNodes[current].chainSum = topTreeNodes[current].value + topTreeNodes[topTreeNodes[current].children[0]].chainSum + topTreeNodes[topTreeNodes[current].children[1]].chainSum;
-        topTreeNodes[current].stackMax = max(bst.valueMax[topTreeNodes[current].subtreeRoot], max(topTreeNodes[topTreeNodes[current].children[0]].stackMax, topTreeNodes[topTreeNodes[current].children[1]].stackMax));
-        topTreeNodes[current].stackMin = min(bst.valueMin[topTreeNodes[current].subtreeRoot], min(topTreeNodes[topTreeNodes[current].children[1]].stackMin, topTreeNodes[topTreeNodes[current].children[0]].stackMin));
-        topTreeNodes[current].stackSum = bst.sum[topTreeNodes[current].subtreeRoot] + topTreeNodes[topTreeNodes[current].children[0]].stackSum + topTreeNodes[topTreeNodes[current].children[1]].stackSum;
-        topTreeNodes[current].size = bst.size[topTreeNodes[current].subtreeRoot] + topTreeNodes[topTreeNodes[current].children[0]].size + topTreeNodes[topTreeNodes[current].children[1]].size;
-        topTreeNodes[current].dSize = 1 + topTreeNodes[topTreeNodes[current].children[0]].dSize + topTreeNodes[topTreeNodes[current].children[1]].dSize;
-    }
+void makeChain(int currentNode, int _value) {
+    nodes[currentNode].value = _value;
+    nodes[currentNode].chainMake = _value;
+    nodes[currentNode].chainPlus = 0;
+    nodes[currentNode].chainMax = nodes[currentNode].chainMin = _value;
+    nodes[currentNode].chainSum = _value * nodes[currentNode].dSize;
+}
 
-    void reverse(const int &current) {
-        topTreeNodes[current].reversed ^= 1;
-        swap(topTreeNodes[current].children[0], topTreeNodes[current].children[1]);
+void chainPlus(int currentNode, int _value) {
+    nodes[currentNode].value += _value;
+    nodes[currentNode].chainPlus += _value;
+    nodes[currentNode].chainMax += _value;
+    nodes[currentNode].chainMin += _value;
+    nodes[currentNode].chainSum += _value * nodes[currentNode].dSize;
+}
+
+void propagate(int currentNode) {
+    if (nodes[currentNode].reversed) {
+        if (nodes[currentNode].children[0]) _reverse(nodes[currentNode].children[0]);
+        if (nodes[currentNode].children[1]) _reverse(nodes[currentNode].children[1]);
+        nodes[currentNode].reversed = 0;
     }
-    void makeTree(const int &current, const int &value) {
-        topTreeNodes[current].stackMake = value;
-        topTreeNodes[current].stackPlus = 0;
-        if (topTreeNodes[current].size) {
-            if (topTreeNodes[current].subtreeRoot) bst.makeTree(topTreeNodes[current].subtreeRoot, value);
-            topTreeNodes[current].stackMax = topTreeNodes[current].stackMin = value;
-            topTreeNodes[current].stackSum = value * topTreeNodes[current].size;
+    if (nodes[currentNode].stackMake != INF) {
+        if (nodes[currentNode].children[0]) makeTree(nodes[currentNode].children[0], nodes[currentNode].stackMake);
+        if (nodes[currentNode].children[1]) makeTree(nodes[currentNode].children[1], nodes[currentNode].stackMake);
+        nodes[currentNode].stackMake = INF;
+    }
+    if (nodes[currentNode].stackPlus) {
+        if (nodes[currentNode].children[0]) stackPlus(nodes[currentNode].children[0], nodes[currentNode].stackPlus);
+        if (nodes[currentNode].children[1]) stackPlus(nodes[currentNode].children[1], nodes[currentNode].stackPlus);
+        nodes[currentNode].stackPlus = 0;
+    }
+    if (nodes[currentNode].chainMake != INF) {
+        if (nodes[currentNode].children[0]) makeChain(nodes[currentNode].children[0], nodes[currentNode].chainMake);
+        if (nodes[currentNode].children[1]) makeChain(nodes[currentNode].children[1], nodes[currentNode].chainMake);
+        nodes[currentNode].chainMake = INF;
+    }
+    if (nodes[currentNode].chainPlus) {
+        if (nodes[currentNode].children[0]) chainPlus(nodes[currentNode].children[0], nodes[currentNode].chainPlus);
+        if (nodes[currentNode].children[1]) chainPlus(nodes[currentNode].children[1], nodes[currentNode].chainPlus);
+        nodes[currentNode].chainPlus = 0;
+    }
+}
+
+void rotate(int currentNode) {
+    int _parent = nodes[currentNode].parent, ancestor = nodes[_parent].parent, direction = nodes[_parent].children[0] == currentNode;
+    if (!isRoot(_parent)) nodes[ancestor].children[nodes[ancestor].children[1] == _parent] = currentNode;
+    nodes[currentNode].parent = ancestor;
+    nodes[nodes[currentNode].children[direction]].parent = _parent;
+    nodes[_parent].children[1 - direction] = nodes[currentNode].children[direction];
+    nodes[_parent].parent = currentNode;
+    nodes[currentNode].children[direction] = _parent;
+    update(_parent);
+    update(currentNode);
+}
+
+int getPrevious(int currentNode) {
+    int x = currentNode;
+    _stack[++stackTop] = x;
+    while (!isRoot(x)) {
+        x = nodes[x].parent;
+        _stack[++stackTop] = x;
+    }
+    while (~stackTop) propagate(_stack[stackTop--]);
+    if (nodes[currentNode].children[0]) {
+        currentNode = nodes[currentNode].children[0];
+        propagate(currentNode);
+        while (currentNode && nodes[currentNode].children[1]) {
+            currentNode = nodes[currentNode].children[1];
+            propagate(currentNode);
         }
+        return currentNode;
+    } else {
+        while (currentNode && nodes[nodes[currentNode].parent].children[0] == currentNode) currentNode = nodes[currentNode].parent;
+        currentNode = nodes[currentNode].parent;
+        return currentNode;
     }
-    void stackPlus(const int &current, const int &value) {
-        topTreeNodes[current].stackPlus += value;
-        topTreeNodes[current].stackSum += value * topTreeNodes[current].size;
-        topTreeNodes[current].stackMax += value;
-        topTreeNodes[current].stackMin += value;
-        if (topTreeNodes[current].subtreeRoot) bst.addTree(topTreeNodes[current].subtreeRoot, value);
-    }
-    void makeChain(const int &current, const int &value) {
-        topTreeNodes[current].value = value;
-        topTreeNodes[current].chainMake = value;
-        topTreeNodes[current].chainPlus = 0;
-        topTreeNodes[current].chainMax = topTreeNodes[current].chainMin = value;
-        topTreeNodes[current].chainSum = value * topTreeNodes[current].dSize;
-    }
-    void chainPlus(const int &current, const int &value) {
-        topTreeNodes[current].value += value;
-        topTreeNodes[current].chainPlus += value;
-        topTreeNodes[current].chainMax += value;
-        topTreeNodes[current].chainMin += value;
-        topTreeNodes[current].chainSum += value * topTreeNodes[current].dSize;
-    }
+}
 
-    void get(const int &current) {
-        if (topTreeNodes[current].reversed) {
-            if (topTreeNodes[current].children[0]) reverse(topTreeNodes[current].children[0]);
-            if (topTreeNodes[current].children[1]) reverse(topTreeNodes[current].children[1]);
-            topTreeNodes[current].reversed = 0;
-        }
-        if (topTreeNodes[current].stackMake != INF) {
-            if (topTreeNodes[current].children[0]) makeTree(topTreeNodes[current].children[0], topTreeNodes[current].stackMake);
-            if (topTreeNodes[current].children[1]) makeTree(topTreeNodes[current].children[1], topTreeNodes[current].stackMake);
-            topTreeNodes[current].stackMake = INF;
-        }
-        if (topTreeNodes[current].stackPlus) {
-            if (topTreeNodes[current].children[0]) stackPlus(topTreeNodes[current].children[0], topTreeNodes[current].stackPlus);
-            if (topTreeNodes[current].children[1]) stackPlus(topTreeNodes[current].children[1], topTreeNodes[current].stackPlus);
-            topTreeNodes[current].stackPlus = 0;
-        }
-        if (topTreeNodes[current].chainMake != INF) {
-            if (topTreeNodes[current].children[0]) makeChain(topTreeNodes[current].children[0], topTreeNodes[current].chainMake);
-            if (topTreeNodes[current].children[1]) makeChain(topTreeNodes[current].children[1], topTreeNodes[current].chainMake);
-            topTreeNodes[current].chainMake = INF;
-        }
-        if (topTreeNodes[current].chainPlus) {
-            if (topTreeNodes[current].children[0]) chainPlus(topTreeNodes[current].children[0], topTreeNodes[current].chainPlus);
-            if (topTreeNodes[current].children[1]) chainPlus(topTreeNodes[current].children[1], topTreeNodes[current].chainPlus);
-            topTreeNodes[current].chainPlus = 0;
-        }
+void splay(int currentNode) {
+    int x = currentNode;
+    _stack[++stackTop] = x;
+    while (!isRoot(x)) {
+        x = nodes[x].parent;
+        _stack[++stackTop] = x;
+        if (x == _treeRoot) _treeRoot = currentNode;
     }
-    void rotate(const int &current) {
-        int parent = topTreeNodes[current].parent, topParent = topTreeNodes[parent].parent, direction = topTreeNodes[parent].children[0] == current;
-        if (!isRoot(parent)) topTreeNodes[topParent].children[topTreeNodes[topParent].children[1] == parent] = current;
-        topTreeNodes[current].parent = topParent;
-        topTreeNodes[topTreeNodes[current].children[direction]].parent = parent;
-        topTreeNodes[parent].children[1 - direction] = topTreeNodes[current].children[direction];
-        topTreeNodes[parent].parent = current;
-        topTreeNodes[current].children[direction] = parent;
-        update(parent);
-        update(current);
+    if (nodes[x].parent) {
+        int _parent = nodes[x].parent;
+        bst.erase(nodes[_parent].subtreeRoot, x);
     }
+    while (~stackTop) propagate(_stack[stackTop--]);
+    while (!isRoot(currentNode)) {
+        int _parent = nodes[currentNode].parent, ancestor = nodes[_parent].parent;
+        if (isRoot(_parent)) rotate(currentNode);
+        else if ((nodes[ancestor].children[0] == _parent) == (nodes[_parent].children[0] == currentNode)) rotate(_parent), rotate(currentNode);
+        else rotate(currentNode), rotate(currentNode);
+    }
+    if (nodes[currentNode].parent) {
+        int _parent = nodes[currentNode].parent;
+        bst.insert(nodes[_parent].subtreeRoot, currentNode, _parent);
+    }
+}
 
-    int getPrevious(const int &current) {
-        int x = current;
-        stack[++tops] = x;
-        while (!isRoot(x)) {
-            x = topTreeNodes[x].parent;
-            stack[++tops] = x;
-        }
-        while (~tops) get(stack[tops--]);
-        if (topTreeNodes[current].children[0]) {
-            current = topTreeNodes[current].children[0];
-            get(current);
-            while (current && topTreeNodes[current].children[1]) {
-                current = topTreeNodes[current].children[1];
-                get(current);
-            }
-            return current;
-        } else {
-            while (current && topTreeNodes[topTreeNodes[current].parent].children[0] == current) current = topTreeNodes[current].parent;
-            current = topTreeNodes[current].parent;
-            return current;
-        }
+int access(int currentNode) {
+    int x = currentNode;
+    while (x) {
+        _stack[++stackTop] = x;
+        x = nodes[x].parent;
     }
+    while (~stackTop) {
+        propagate(_stack[stackTop]);
+        if (stackTop && isRoot(_stack[stackTop - 1])) bst.find(nodes[_stack[stackTop]].subtreeRoot, _stack[stackTop - 1]);
+        stackTop--;
+    }
+    int son = 0;
+    while (currentNode) {
+        splay(currentNode);
+        if (son) bst.erase(nodes[currentNode].subtreeRoot, son);
+        if (nodes[currentNode].children[1]) bst.insert(nodes[currentNode].subtreeRoot, nodes[currentNode].children[1], currentNode);
+        nodes[currentNode].children[1] = son;
+        update(currentNode);
+        son = currentNode;
+        currentNode = nodes[currentNode].parent;
+    }
+    return son;
+}
 
-    void splay(const int &current) {
-        int x = current;
-        stack[++tops] = x;
-        while (!isRoot(x)) {
-            x = topTreeNodes[x].parent;
-            stack[++tops] = x;
-            if (x == troot) troot = current;
-        }
-        if (topTreeNodes[x].parent) {
-            bst.erase(topTreeNodes[topTreeNodes[x].parent].subtreeRoot, x);
-        }
-        while (~tops) get(stack[tops--]);
-        while (!isRoot(current)) {
-            int parent = topTreeNodes[current].parent; topParent = topTreeNodes[parent].parent;
-            if (isRoot(parent)) rotate(current);
-            else if ((topTreeNodes[topParent].children[0] == parent) == (topTreeNodes[parent].children[0] == current)) rotate(parent), rotate(current);
-            else rotate(current), rotate(current);
-        }
-        if (topTreeNodes[current].parent) {
-            int parent = topTreeNodes[current].parent;
-            bst.insert(topTreeNodes[parent].subtreeRoot, current, parent);
-        }
-    }
+void makeRoot(int currentNode) {
+    _treeRoot = currentNode;
+    _reverse(access(currentNode));
+}
 
-    int access(const int &current) {
-        int x = current;
-        while (x) {
-            stack[++tops] = x;
-            x = topTreeNodes[x].parent;
-        }
-        while (~tops) {
-            get(stack[tops]);
-            if (tops && isRoot(stack[tops - 1])) bst.find(topTreeNodes[stack[tops]].subtreeRoot, stack[tops - 1]);
-            tops--;
-        }
-        int ret = 0;
-        while (current) {
-            splay(current);
-            if (ret) bst.erase(topTreeNodes[current].subtreeRoot, ret);
-            if (topTreeNodes[current].children[1]) bst.insert(topTreeNodes[current].subtreeRoot, topTreeNodes[current].children[1], current);
-            topTreeNodes[current].children[1] = ret;
-            update(current);
-            ret = current;
-            current = topTreeNodes[current].parent;
-        }
-        return ret;
-    }
+void link(int a, int b) {
+    makeRoot(a);
+    access(a);
+    makeRoot(b);
+    access(b);
+    nodes[a].parent = b;
+    nodes[b].children[1] = a;
+    update(b);
+}
 
-    void makeRoot(const int &current) {
-        troot = current;
-        reverse(access(current));
-    }
+void _makeTree(int currentNode, int value) {
+    access(currentNode);
+    int temp = getPrevious(currentNode);
+    if (temp) splay(temp);
+    makeTree(currentNode, value);
+    makeChain(currentNode, value);
+    if (temp) update(temp);
+}
 
-    void link(int x, int y) {
-        makeRoot(x);
-        access(x);
-        makeRoot(y);
-        access(y);
-        topTreeNodes[x].parent = y;
-        topTreeNodes[y].children[1] = x;
-        update(y);
-    }
+void _makeChain(int a, int b, int value) {
+    makeRoot(a);
+    makeChain(access(b), value);
+}
 
-    void treeMake(const int &current, const int &value) {
-        access(current);
-        int prev = getPrevious(current);
-        if (prev) splay(prev);
-        makeTree(current, value);
-        makeChain(current, value);
-        if (prev) update(prev);
-    }
+void plusTree(int currentNode, int value) {
+    access(currentNode);
+    splay(currentNode);
+    int temp = getPrevious(currentNode);
+    if (temp) splay(temp);
+    stackPlus(currentNode, value);
+    chainPlus(currentNode, value);
+    if (temp) update(temp);
+}
 
-    void chainMake(int a, int y, const int &value) {
-        makeRoot(a);
-        makeChain(access(y), value);
-    }
+void plusChain(int a, int b, int value) {
+    makeRoot(a);
+    chainPlus(access(b), value);
+}
 
-    void plusTree(const int &current, const int &value) {
-        access(current);
-        splay(current);
-        int prev = getPrevious(current);
-        if (prev) splay(prev);
-        stackPlus(current, value);
-        chainPlus(current, value);
-        if (prev) update(prev);
-    }
+bool isSame(int a, int b) {
+    while (nodes[a].parent) a = nodes[a].parent;
+    while (nodes[b].parent) b = nodes[b].parent;
+    return a == b;
+}
 
-    // tool
-    bool isSame(int a, int b) {
-        while (topTreeNodes[a].parent) a = topTreeNodes[a].parent;
-        while (topTreeNodes[b].parent) b = topTreeNodes[b].parent;
-        return a == b;
-    }
+int sumChain(int a, int b) {
+    makeRoot(a);
+    return nodes[access(b)].chainSum;
+}
 
-    void plusChain(int a, int b, const int &value) {
-        makeRoot(a);
-        chainPlus(access(b), value);
-    }
+int maxChain(int a, int b) {
+    makeRoot(a);
+    return nodes[access(b)].chainMax;
+}
 
-    int sumQuery(int a, int b) {
-        makeRoot(a);
-        return topTreeNodes[access(b)].chainSum;
-    }
+int minChain(int a, int b) {
+    makeRoot(a);
+    return nodes[access(b)].chainMin;
+}
 
-    int maxQuery(int a, int b) {
-        makeRoot(a);
-        return topTreeNodes[access(b)].chainMax;
-    }
+int sumQuery(int a) {
+    access(a);
+    int temp = getPrevious(a);
+    if (temp) splay(temp);
+    return nodes[a].stackSum + nodes[a].chainSum;
+}
 
-    int minQuery(int a, int b) {
-        makeRoot(a);
-        return topTreeNodes[access(b)].chainMin;
-    }
+int maxQuery(int a) {
+    access(a);
+    int temp = getPrevious(a);
+    if (temp) splay(temp);
+    return max(nodes[a].chainMax, nodes[a].stackMax);
+}
 
-    int sumTree(int a) {
-        access(a);
-        int prev = getPrevious(a);
-        if (prev) splay(prev);
-        return topTreeNodes[a].stackSum + topTreeNodes[a].chainSum;
-    }
-
-    int maxTree(int a) {
-        access(a);
-        int prev = getPrevious(a);
-        if (prev) splay(prev);
-        return max(topTreeNodes[a].chainMax, topTreeNodes[a].stackMax);
-    }
-
-    int minTree(int a) {
-        access(a);
-        int prev = getPrevious(a);
-        if (prev) splay(prev);
-        return min(topTreeNodes[a].chainMin, topTreeNodes[a].stackMin);
-    }
-};
+int minQuery(int a) {
+    access(a);
+    int temp = getPrevious(a);
+    if (temp) splay(temp);
+    return min(nodes[a].chainMin, nodes[a].stackMin);
+}
