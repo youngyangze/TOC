@@ -29,6 +29,7 @@ using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gn
 const int INF = 0x3f3f3f3f;
 const ll VINF = 2e18;
 const double PI = acos(-1);
+const int MAX_N = 1e5 + 7;
 
 void makeTree(int currentNode, int _value);
 void makeChain(int currentNode, int _value);
@@ -40,13 +41,14 @@ struct node {
     int parent;
     bool reversed;
     int value, subtreeRoot, stackPlus, chainPlus, stackMake, chainMake, chainSum, stackSum, chainMax, chainMin, stackMax, stackMin, size, dSize;
-} nodes[MAX_N];
+};
 
-vint _stack(MAX_N), stackTop = -1;
-int treeTop = 0, _treeRoot;
+node nodes[MAX_N];
+int _stack[MAX_N];
+int treeTop = 0, _treeRoot, stackTop = -1;
 
 struct splayTree {
-    vint left(MAX_N), right(MAX_N), subtreeRoot(MAX_N), values(MAX_N), groups(MAX_N), valueMax(MAX_N), valueMin(MAX_N), sum(MAX_N), size(MAX_N), plus(MAX_N), makeValue(MAX_N), _stack(MAX_N);
+    int left[MAX_N], right[MAX_N], subtreeRoot[MAX_N], values[MAX_N], groups[MAX_N], valueMax[MAX_N], valueMin[MAX_N], sum[MAX_N], size[MAX_N], plus[MAX_N], makeValue[MAX_N], _stack[MAX_N];
     int treeTop, stackTop;
     splayTree() {
         stackTop = -1;
@@ -198,8 +200,7 @@ struct splayTree {
     }
 } bst;
 
-matrix edge(MAX_N, vint(2));
-
+int edge[MAX_N][2];
 
 bool isRoot(int currentNode) {return !nodes[currentNode].parent || (nodes[nodes[currentNode].parent].children[0] != currentNode && nodes[nodes[currentNode].parent].children[1] != currentNode);}
 
