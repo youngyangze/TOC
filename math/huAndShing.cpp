@@ -1,4 +1,3 @@
-// never full code
 #include <bits/stdc++.h>
 #include <bits/extc++.h>
 
@@ -17,7 +16,7 @@ using vpii = vector<pii>;
 using vpll = vector<pll>;
 using dbl = deque<bool>;
 using dbltrix = deque<dbl>;
-using sint = stck<int>;
+using sint = stack<int>;
 using tii = tuple<int, int, int>;
 using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
 
@@ -46,6 +45,7 @@ struct harc {
 };
 
 class huAndShing {
+public:
     harc arcs[MAX_N];
     ll weights[MAX_N], cumulativeProducts[MAX_N];
     vpii edgeList;
@@ -62,48 +62,6 @@ class huAndShing {
         arcs[totalArcs].lowerWeightIndex = weights[start] < weights[end] ? start : end;
         arcs[totalArcs].weightProduct = weights[start] * weights[end];
         arcs[totalArcs].baseValue = cumulativeProducts[end] - cumulativeProducts[start] - arcs[totalArcs].weightProduct;
-    }
-
-    void buildTree() {
-        vint stck;
-        createArc(1, n + 1);
-        for (const auto& edge : edgeList) {
-            createArc(edge.first, edge.second);
-            while (!stck.empty() && arcs[totalArcs].contains(arcs[stck.back()])) {
-                tree[totalArcs].push_back(stck.back());
-                stck.pop_back();
-            }
-            stck.push_back(totalArcs);
-        }
-        while (!stck.empty()) {
-            tree[1].push_back(stck.back());
-            stck.pop_back();
-        }
-    }
-
-    void collectEdges() {
-        vint stck;
-        vpii temporaryEdges;
-        for (int i = 1; i <= n; i++) {
-            while (stck.size() >= 2 && weights[stck.back()] > weights[i]) {
-                temporaryEdges.push_back({stck[stck.size() - 2], i});
-                stck.pop_back();
-            }
-            stck.push_back(i);
-        }
-        for (const auto& edge : temporaryEdges) {
-            if (edge.first == 1 || edge.second == 1) continue;
-            edgeList.push_back(edge);
-        }
-    }
-
-    void init() {
-        rotate(weights + 1, weights + (min_element(weights + 1, weights + n + 1) - weights), weights + n + 1);
-        weights[n + 1] = weights[1];
-        
-        collectEdges();
-        for (int i = 2; i <= n + 1; i++) cumulativeProducts[i] = cumulativeProducts[i - 1] + weights[i - 1] * weights[i];
-        buildTree();
     }
 
     ll calculateWeightProduct(int node) {
@@ -176,21 +134,14 @@ class huAndShing {
             removeArc(node);
             current.numerator = weights[current.lowerWeightIndex] * (current.denominator + current.weightProduct - calculateWeightProduct(node));
         }
+
         while (!currentQueue.empty() && current <= currentQueue.top()) {
             auto topArc = currentQueue.top();
             current.denominator += topArc.denominator;
             removeArc(node);
             current.numerator += topArc.numerator;
         }
+
         addArc(node);
-    }
-
-    huAndShing(int numNodes, ll* weightArray) : n(numNodes) {
-        copy(weightArray, weightArray + numNodes + 1, weights);
-    }
-
-    void solve() { // bro it's cap it ain't
-        init();
-        dfs(1);
     }
 };
