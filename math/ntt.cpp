@@ -56,10 +56,10 @@ public:
             if (i < j) swap(f[i], f[j]);
         }
         ll ang = _pow(w, (mod - 1) / n, mod); if (inv) ang = _pow(ang, mod - 2, mod);
-        root[0] = 1; for (int i = 1; i < (n >> 1); i++) root[i] = root[i-1] * ang % mod;
+        root[0] = 1; for (int i = 1; i < (n >> 1); i++) root[i] = root[i - 1] * ang % mod;
         for (int i = 2; i <= n; i <<= 1) {
             int step = n / i;
-            for (int j = 0; j<n; j += i) {
+            for (int j = 0; j < n; j += i) {
                 for (int k = 0; k < (i >> 1); k++) {
                     ll u = f[j | k], v = f[j | k | i >> 1] * root[step * k] % mod;
                     f[j | k] = (u + v) % mod;
