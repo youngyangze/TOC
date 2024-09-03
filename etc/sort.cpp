@@ -2,6 +2,7 @@
 #include <bits/extc++.h>
 
 using namespace std;
+using namespace chrono;
 using ll = long long;
 using ld = long double;
 using ull = unsigned long long;
@@ -29,6 +30,23 @@ using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gn
 const int INF = 0x3f3f3f3f;
 const ll VINF = 2e18;
 const double PI = acos(-1);
+const int LOW = -100007, HIGH = 100007;
+
+struct PRNG {
+    ll seed;
+    PRNG(ll seed) : seed(seed) {}
+
+    ll _random() {
+        const ll m = 2147483647, a = 16807, q = m / a, R = m % a;
+        seed = a * (seed % q) - R * (seed / q);
+        if (seed <= 0) seed += m;
+        return seed;
+    }
+
+    ll randint(int low, int high) {
+        return low + _random() % (high - low);
+    }
+};
 
 template<typename T> void blockMergeSort(vector<T> &a, const T &blockSize) {
     vector<vector<T>> blocks;
@@ -56,16 +74,94 @@ template<typename T> void blockMergeSort(vector<T> &a, const T &blockSize) {
     a = ret;
 }
 
+template<typename T> inline void _swap(T &a, T &b) {
+    T temp = a;
+    a = b;
+    b = temp;
+}
+
+template <typename T> void bubbleSort(vector<T> &a) {
+    for (int i = 0; i < a.size(); i++) {
+        for (int j = 1; j < a.size(); j++) {
+            if (a[j] < a[j - 1]) _swap(a[j], a[j - 1]);
+        }
+    }
+}
+
+template <typename T> void optimizedBubbleSort(vector<T> &a) {
+    for (int i = 0; i < a.size(); i++) {
+        bool swapped = false;
+        for (int j = 1; j < a.size() - i; j++) {
+            if (a[j] < a[j - 1]) {
+                swapped = true;
+                _swap(a[j], a[j - 1]);
+            }
+        }
+        if (!swapped) break;
+    }
+}
+
 template<typename T> inline bool sorted(const vector<T> &a) {
     vector<T> b = a;
     sort(all(b));
     return a == b;
 }
 
+template<typename T> void shuffle(vector<T> &a, PRNG &rng) {
+    for (int i = a.size() - 1; i > 0; i--) _swap(a[i], a[rng.randint(0, i + 1)]);
+}
+
+void test(int n, bool allowDuplicate, bool fm) {
+    vint a;
+    a.reserve(n);
+    PRNG rng(0x94949);
+    if (allowDuplicate) {
+        for (int i = 0; i < n; i++) a.emplace_back(rng.randint(LOW, HIGH + 1));
+    } else {
+        if (!fm) {
+            set<int> uniqueNumbers;
+            while (a.size() < n) {
+                int rnn = rng.randint(LOW, HIGH + 1);
+                if (uniqueNumbers.find(rnn) != uniqueNumbers.end()) {
+                    uniqueNumbers.insert(rnn);
+                    a.emplace_back(rnn);
+                }
+            }
+        } else {
+            for (int i = 0; i < n; i++) a.emplace_back(i);
+            shuffle(a, rng);
+        }
+    }
+
+    for (const int &i : a) cout << i << ' ';
+    cout << endl << "Checking..." << endl << endl;
+    vint b = a;
+
+    cout << "Checking: Block Merge Sort(block size 3)" << endl;
+    system_clock::time_point start = system_clock::now();
+    blockMergeSort(b, 3);
+    system_clock::time_point end = system_clock::now();
+    milliseconds time = duration_cast<milliseconds>(end - start);
+    cout << (sorted(b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
+
+    b = a;
+    cout << "Checking: Bubble Sort" << endl;
+    start = system_clock::now();
+    bubbleSort(b);
+    end = system_clock::now();
+    time = duration_cast<milliseconds>(end - start);
+    cout << (sorted(b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
+    
+    b = a;
+    cout << "Checking: Bubble Sort(Optimized)" << endl;
+    start = system_clock::now();
+    optimizedBubbleSort(b);
+    end = system_clock::now();
+    time = duration_cast<milliseconds>(end - start);
+    cout << (sorted(b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
+}
+
 int main() {
-    vint a = {5, 1, 8, 0, 1, 5, 0};
-
-    blockMergeSort(a, 3);
-
-    for (auto i: a) cout << i << ' ';
+    fastio;
+    test(458, true, false);
 }
