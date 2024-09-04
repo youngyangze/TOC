@@ -313,22 +313,3 @@ public:
         graphWeight[u][v] = graphWeight[v][u] = w;
     }
 };
-
-int main() {
-    fastio;
-    int n, m;
-
-    cin >> n >> m;
-
-    weightedGeneralMatching gm(n);
-    for (int i = 0; i < m; i++) {
-        int u, v, w;
-
-        cin >> u >> v >> w;
-        gm.addEdge(u, v, w);
-    }
-
-    cout << gm.solve().first << endl;
-
-    return 0;
-}
