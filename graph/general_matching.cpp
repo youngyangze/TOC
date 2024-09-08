@@ -66,7 +66,7 @@ struct generalMatching {
         } while (startVertex != previousVertex);
     }
 
-    int lcs(int v, int w) {
+    int lca(int v, int w) {
         timeStamp++;
         while (true) {
             if (v) {
@@ -111,7 +111,7 @@ struct generalMatching {
                     que.push(matched[neighbor]);
                     visited[matched[neighbor]] = 0;
                 } else if (visited[neighbor] == 0 && original[vertex] != original[neighbor]) {
-                    int lcaVertex = lcs(original[vertex], original[neighbor]);
+                    int lcaVertex = lca(original[vertex], original[neighbor]);
                     blossom(neighbor, vertex, lcaVertex);
                     blossom(vertex, neighbor, lcaVertex);
                 }
