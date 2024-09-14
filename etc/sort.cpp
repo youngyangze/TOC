@@ -197,21 +197,31 @@ template <typename T> void radixSort(vector<T> &a) {
     a.insert(a.end(), all(positive));
 }
 
-template <typename T> void youngyangzeSort(vector<T> &a, int n) {
-    PRNG prng(0xDEADBEEF);
-    
-    for (int k = 0; k < n * n * n; k++) {
+int _counts = 0;
+
+template<typename T> inline void __swap(T &a, T &b) {
+    T temp = a;
+    a = b;
+    b = temp;
+    _counts++;
+}
+
+template <typename T> void youngyangzeSort(vector<T> &a) {
+    int k = a.size();
+    while (k--) {
+        _counts = 0;
         for (int i = 0; i < a.size(); i++) {
             int pivot = i;
             T pivotValue = a[pivot];
 
             for (int j = 0; j < a.size(); j++) {
                 if (j != pivot) {
-                    if (a[j] < pivotValue && j > pivot) _swap(a[j], a[pivot]);
-                    else if (a[j] > pivotValue && j < pivot) _swap(a[j], a[pivot]);
+                    if (a[j] < pivotValue && j > pivot) __swap(a[j], a[pivot]);
+                    else if (a[j] > pivotValue && j < pivot) __swap(a[j], a[pivot]);
                 }
             }
         }
+        if (_counts == 0) break;
     }
 }
 
@@ -409,7 +419,7 @@ void test(int n, bool allowDuplicate, bool fm) {
     b = a;
     cout << "Checking: youngyangze Sort" << endl;
     starts = system_clock::now();
-    youngyangzeSort(b, b.size());
+    youngyangzeSort(b);
     __________ends = system_clock::now();
     time = duration_cast<milliseconds>(__________ends - starts);
     cout << (sorted(a, b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
