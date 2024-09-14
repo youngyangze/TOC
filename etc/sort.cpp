@@ -197,6 +197,17 @@ template <typename T> void radixSort(vector<T> &a) {
     a.insert(a.end(), all(positive));
 }
 
+template <typename T> void slowSort(vector<T> &a, int start, int end) {
+    if (start >= end) return;
+
+    const int mid = floor((start + end) / 2);
+
+    slowSort(a, start, mid);
+    slowSort(a, mid + 1, end);
+    if (a[end] < a[mid]) _swap(a[end], a[mid]);
+    slowSort(a, start, end - 1);
+}
+
 int _counts = 0;
 
 template<typename T> inline void __swap(T &a, T &b) {
@@ -326,6 +337,94 @@ template <typename T> void countSort(vector<T> &a) {
     }
 }
 
+template <typename T> void miracleSort(vector<T> &a) {
+    while (!sorted(a)) continue;
+}
+
+template <typename T> void heapify(vector<T> &a, int n, int i, int _left) {
+    int largest = i, left = 2 * (i - _left) + 1 + _left, right = 2 * (i - _left) + 2 + _left;
+
+    if (left < n && a[left] > a[largest]) largest = left;
+    if (right < n && a[right] > a[largest]) largest = right;
+
+    if (largest != i) {
+        swap(a[i], a[largest]);
+        heapify(a, n, largest, _left);
+    }
+}
+
+template <typename T> void makeHeap(vector<T> &a, int left, int right) {
+    int n = right + 1;
+    for (int i = (left + right) / 2; i >= left; i--) heapify(a, n, i, left);
+}
+
+template <typename T> void sortHeap(vector<T> &a, int left, int right) {
+    for (int i = right; i > left; i--) {
+        swap(a[left], a[i]);
+        heapify(a, i, left, left);
+    }
+}
+
+template <typename T> void _insertionSort(vector<T> &a, int left, int right) {
+    for (int i = left + 1; i <= right; i++) {
+        T key = a[i];
+        int j = i - 1;
+        while (j >= left && a[j] > key) {
+            a[j + 1] = a[j];
+            j--;
+        }
+        a[j + 1] = key;
+    }
+}
+
+template <typename T> int _partition(vector<T> &a, int low, int high) {
+    T pivot = a[high];
+    int i = low - 1;
+    for (int j = low; j < high; j++) {
+        if (a[j] <= pivot) {
+            i++;
+            swap(a[i], a[j]);
+        }
+    }
+    swap(a[i + 1], a[high]);
+    return i + 1;
+}
+
+template <typename T> void _introSort(vector<T> &a, int left, int right, int depthLimit) {
+    int size = right - left + 1;
+
+    if (size < 16) {
+        _insertionSort(a, left, right);
+        return;
+    }
+
+    if (depthLimit == 0) {
+        makeHeap(a, left, right);
+        sortHeap(a, left, right);
+        return;
+    }
+
+    int pivot = _partition(a, left, right);
+    _introSort(a, left, pivot - 1, depthLimit - 1);
+    _introSort(a, pivot + 1, right, depthLimit - 1);
+}
+
+template <typename T> void introSort(vector<T> &a) {
+    _introSort(a, 0, a.size() - 1, 2 * log(a.size()));
+}
+
+template <typename T> void insertionSort(vector<T> &a) {
+    for (int i = 1; i < a.size(); i++) {
+        T key = a[i];
+        int j = i - 1;
+        while (j >= 0 && a[j] > key) {
+            a[j + 1] = a[j];
+            j--;
+        }
+        a[j + 1] = key;
+    }
+}
+
 template <typename T> void print(const vector<T> &a) {
     for (const auto &i : a) cout << i << ' ';
     cout << endl;
@@ -444,6 +543,39 @@ void test(int n, bool allowDuplicate, bool fm) {
     cout << "Checking: Count Sort" << endl;
     starts = system_clock::now();
     countSort(b);
+    __________ends = system_clock::now();
+    time = duration_cast<milliseconds>(__________ends - starts);
+    cout << (sorted(a, b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
+
+    b = a;
+    cout << "Checking: Slow Sort" << endl;
+    starts = system_clock::now();
+    slowSort(b, 0, b.size() - 1);
+    __________ends = system_clock::now();
+    time = duration_cast<milliseconds>(__________ends - starts);
+    cout << (sorted(a, b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
+
+    b = a;
+    cout << "Checking: Intro Sort" << endl;
+    starts = system_clock::now();
+    introSort(b);
+    __________ends = system_clock::now();
+    time = duration_cast<milliseconds>(__________ends - starts);
+    cout << (sorted(a, b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
+    
+
+    b = a;
+    cout << "Checking: Intro Sort" << endl;
+    starts = system_clock::now();
+    introSort(b);
+    __________ends = system_clock::now();
+    time = duration_cast<milliseconds>(__________ends - starts);
+    cout << (sorted(a, b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
+    
+    b = a;
+    cout << "Checking: Insertion Sort" << endl;
+    starts = system_clock::now();
+    insertionSort(b);
     __________ends = system_clock::now();
     time = duration_cast<milliseconds>(__________ends - starts);
     cout << (sorted(a, b) ? "AC, " : "WA, ") << time.count() << "ms" << endl << endl;
