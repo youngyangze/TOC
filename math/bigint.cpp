@@ -47,7 +47,7 @@ public:
 
     bigint(ll n) {
         negative = (n < 0);
-        value = to_string(abs(n));
+        value = to_string(negative ? -n : n);
     }
 
     friend ostream &operator<<(ostream &out, const bigint &b) {
@@ -87,6 +87,16 @@ public:
 
     bool operator >=(const bigint &b) const {
         return !(*this < b);
+    }
+
+    bigint operator +() const {
+        return *this;
+    }
+
+    bigint operator -() const {
+        bigint result = *this;
+        if (result.value != "0") result.negative = !negative;
+        return result;
     }
 
     bigint operator +(const bigint &b) const {
@@ -154,6 +164,27 @@ public:
         return *this;
     }
 
+    bigint abs() const {
+        bigint result = *this;
+        result.negative = false;
+        return result;
+    }
+
+    friend bigint abs(const bigint &a) {
+        return a.abs();
+    }
+
+    friend bigint gcd(const bigint &a, const bigint &b) {
+        bigint x = a.abs();
+        bigint y = b.abs();
+        while (y != bigint("0")) {
+            bigint temp = y;
+            y = x % y;
+            x = temp;
+        }
+        return x;
+    }
+
 private:
     void trim() {
         while (value.length() > 1 && value[0] == '0') value.erase(0, 1);
@@ -203,7 +234,6 @@ private:
     }
 
     static bigint divide(const string &a, const string &b) {
-        assert(b == 0);
         bigint divisor(b), remainder("0"), quotient("0");
         for (char c : a) {
             remainder = remainder * bigint(10) + bigint(c - '0');
