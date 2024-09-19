@@ -33,9 +33,9 @@ const double PI = acos(-1);
 ll _pow(ll base, ll exp) {
     ll ret = 1;
     while (exp) {
-      if (exp & 1) ret *= base;
-      base *= base;
-      exp >>= 1;
+        if (exp & 1) ret *= base;
+        base *= base;
+        exp >>= 1;
     }
     return ret;
 }
