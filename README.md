@@ -1,5 +1,6 @@
 # TOC
-헤헤 다했다
+Many codes are not mine.
+But some aren't.
 
 ```cpp
 #include <bits/stdc++.h>
