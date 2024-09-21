@@ -33,66 +33,66 @@ const double PI = acos(-1);
 const int MOD = 1e9 + 7;
 
 struct modint {
-	int n;
-	modint() {
+    int n;
+    modint() {
         n = 0;
     }
-	modint(const ll &_n) {
-		n = (-MOD <= _n && _n < MOD) ? _n : _n % MOD;
-		if (n < 0) n += MOD;
-	}
+    modint(const ll &_n) {
+    	n = (-MOD <= _n && _n < MOD) ? _n : _n % MOD;
+    	if (n < 0) n += MOD;
+    }
 
-	friend ostream &operator <<(ostream &os, const modint &a) { return os << a.n; }
-	friend bool operator==(const modint &a, const modint &b) { return a.n == b.n; }
-	friend bool operator!=(const modint &a, const modint &b) { return !(a == b); }
-	friend bool operator<(const modint &a, const modint &b) { return a.n < b.n; }
+    friend ostream &operator <<(ostream &os, const modint &a) { return os << a.n; }
+    friend bool operator==(const modint &a, const modint &b) { return a.n == b.n; }
+    friend bool operator!=(const modint &a, const modint &b) { return !(a == b); }
+    friend bool operator<(const modint &a, const modint &b) { return a.n < b.n; }
 
-	modint operator -() const {
+    modint operator -() const {
         return modint(-n);
     }
 
-	modint &operator +=(const modint &m) {
-		if ((n += m.n) >= MOD) n -= MOD;
-		return *this;
-	}
+    modint &operator +=(const modint &m) {
+    	if ((n += m.n) >= MOD) n -= MOD;
+    	return *this;
+    }
 
-	modint &operator -=(const modint &m) {
-		if ((n -= m.n) < 0) n += MOD;
-		return *this;
-	}
+    modint &operator -=(const modint &m) {
+    	if ((n -= m.n) < 0) n += MOD;
+    	return *this;
+    }
 
-	modint &operator *=(const modint &m) {
-		n = (ll)n * m.n % MOD;
-		return *this;
-	}
+    modint &operator *=(const modint &m) {
+    	n = (ll)n * m.n % MOD;
+    	return *this;
+    }
 
-	friend modint ipow(modint a, ll p) {
-		modint ret = 1;
-		for (; p; p /= 2, a *= a) {
-			if (p & 1) ret *= a;
+    friend modint ipow(modint a, ll p) {
+    	modint ret = 1;
+    	for (; p; p /= 2, a *= a) {
+    		if (p & 1) ret *= a;
         }
-		return ret;
-	}
+    	return ret;
+    }
 
-	modint inv() const {
+    modint inv() const {
         return ipow(*this, MOD - 2);
     }
 
-	modint &operator /=(const modint &m) {
+    modint &operator /=(const modint &m) {
         return (*this) *= m.inv();
     }
 
-	friend modint operator +(modint a, const modint &b) {
+    friend modint operator +(modint a, const modint &b) {
         return a += b;
     }
-	friend modint operator -(modint a, const modint &b) {
+    friend modint operator -(modint a, const modint &b) {
         return a -= b;
     }
-	friend modint operator *(modint a, const modint &b) {
+    friend modint operator *(modint a, const modint &b) {
         return a *= b;
     }
-	friend modint operator /(modint a, const modint &b) {
+    friend modint operator /(modint a, const modint &b) {
         return a /= b;
     }
-	operator int64_t() const { return n; }
+    operator int64_t() const { return n; }
 };
