@@ -32,14 +32,16 @@ const ll VINF = 2e18;
 const double PI = acos(-1);
 const int MOD = 1e9 + 7;
 
-struct modint {
+class modint {
+private:
     int n;
-    modint() {
-        n = 0;
-    }
+
+public:
+    modint() : n(0) {}
+
     modint(const ll &_n) {
-    	n = (-MOD <= _n && _n < MOD) ? _n : _n % MOD;
-    	if (n < 0) n += MOD;
+        n = (-MOD <= _n && _n < MOD) ? _n : _n % MOD;
+        if (n < 0) n += MOD;
     }
 
     friend ostream &operator <<(ostream &os, const modint &a) { return os << a.n; }
@@ -52,26 +54,26 @@ struct modint {
     }
 
     modint &operator +=(const modint &m) {
-    	if ((n += m.n) >= MOD) n -= MOD;
-    	return *this;
+        if ((n += m.n) >= MOD) n -= MOD;
+        return *this;
     }
 
     modint &operator -=(const modint &m) {
-    	if ((n -= m.n) < 0) n += MOD;
-    	return *this;
+        if ((n -= m.n) < 0) n += MOD;
+        return *this;
     }
 
     modint &operator *=(const modint &m) {
-    	n = (ll)n * m.n % MOD;
-    	return *this;
+        n = (ll)n * m.n % MOD;
+        return *this;
     }
 
     friend modint ipow(modint a, ll p) {
-    	modint ret = 1;
-    	for (; p; p /= 2, a *= a) {
-    		if (p & 1) ret *= a;
+        modint ret = 1;
+        for (; p; p /= 2, a *= a) {
+            if (p & 1) ret *= a;
         }
-    	return ret;
+        return ret;
     }
 
     modint inv() const {
@@ -85,14 +87,18 @@ struct modint {
     friend modint operator +(modint a, const modint &b) {
         return a += b;
     }
+
     friend modint operator -(modint a, const modint &b) {
         return a -= b;
     }
+
     friend modint operator *(modint a, const modint &b) {
         return a *= b;
     }
+
     friend modint operator /(modint a, const modint &b) {
         return a /= b;
     }
+
     operator int64_t() const { return n; }
 };
