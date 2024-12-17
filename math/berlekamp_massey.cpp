@@ -1,5 +1,5 @@
-#include <bits/stdc++.h>
 #include <bits/extc++.h>
+#include <bits/stdc++.h>
 
 using namespace std;
 using ll = long long;
@@ -9,7 +9,7 @@ using vint = vector<int>;
 using matrix = vector<vint>;
 using vll = vector<ll>;
 using matrlx = vector<vll>;
-using fourdimensionalMatrix = vector<matrix>; // ;;
+using fourdimensionalMatrix = vector<matrix>;  // ;;
 using pii = pair<int, int>;
 using pll = pair<ll, ll>;
 using vpii = vector<pii>;
@@ -29,81 +29,83 @@ using ordered_set = __gnu_pbds::tree<int, __gnu_pbds::null_type, less<int>, __gn
 const int INF = 0x3f3f3f3f;
 const ll VINF = 2e18;
 const double PI = acos(-1);
-const int MOD = 1e9 + 7;
+const ll MOD = 1e9 + 7;
 
-ull _pow(ull base, ull exp) {
-	ull ret = 1;
-	while (exp) {
-		if(exp & 1) ret *= base % MOD;
-		exp *= exp % MOD;
-		exp >>= 1;
-	}
-	return ret;
+ll _pow(ll base, ll exp) {
+    ll ret = 1;
+    while (exp) {
+        if (exp & 1) ret = (ret * base) % MOD;
+        base = (base * base) % MOD;
+        exp >>= 1;
+    }
+    return ret;
 }
 
-vint berlekampMassey(vint x) {
-	vint ls, current;
-	int lf, ld;
-	for (int i = 0; i < x.size(); i++) {
-		ull t = 0;
-		for (int j = 0; j < current.size(); j++)t = (t + 1ll * x[i - j - 1] * current[j]) % MOD;
-		if ((t - x[i]) % MOD == 0) continue;
-		if (current.empty()) {
-			current.resize(i + 1);
-			lf = i;
-			ld = (t - x[i]) % MOD;
-			continue;
-		}
-		ull k = -(x[i] - t) * _pow(ld, MOD - 2) % MOD;
-		vint c(i - lf - 1);
-		c.push_back(k);
-		for (auto &j : ls) c.push_back(-j * k % MOD);
-		if (c.size() < current.size()) c.resize(current.size());
-		for (int j = 0; j < current.size(); j++) c[j] = (c[j] + current[j]) % MOD;
-		if (i - lf + (int)ls.size() >= (int)current.size()) tie(ls, lf, ld) = make_tuple(current, i, (t - x[i]) % MOD);
-		current = c;
-	}
-	for(auto &i : current) i = (i % MOD + MOD) % MOD;
-	return current;
+vll berlekampMassey(vll x) {
+    vll ls, current;
+    ll lf, ld;
+    for (ll i = 0; i < x.size(); i++) {
+        ll t = 0;
+        for (ll j = 0; j < current.size(); j++) t = (t + 1ll * x[i - j - 1] * current[j]) % MOD;
+        if ((t - x[i]) % MOD == 0) continue;
+        if (current.empty()) {
+            current.resize(i + 1);
+            lf = i;
+            ld = (t - x[i]) % MOD;
+            continue;
+        }
+        ll k = -(x[i] - t) * _pow(ld, MOD - 2) % MOD;
+        vll c(i - lf - 1);
+        c.emplace_back(k);
+        for (auto &j : ls) c.emplace_back(-j * k % MOD);
+        if (c.size() < current.size()) c.resize(current.size());
+        for (ll j = 0; j < current.size(); j++) c[j] = (c[j] + current[j]) % MOD;
+        if (i - lf + (ll)ls.size() >= (ll)current.size()) tie(ls, lf, ld) = make_tuple(current, i, (t - x[i]) % MOD);
+        current = c;
+    }
+    for (auto &i : current) i = (i % MOD + MOD) % MOD;
+    return current;
 }
 
-int getNth(vint rec, vint dp, ull n) {
-	int m = rec.size();
-	vint s(m), t(m);
-	s[0] = 1;
-	if(m != 1) t[1] = 1;
-	else t[0] = rec[0];
-	auto _multiply = [&rec](vint v, vint w) {
-		int m = v.size();
-		vint t(2 * m);
-		for(int j = 0; j < m; j++) {
-			for(int k = 0; k < m; k++) {
-				t[j + k] += 1ll * v[j] * w[k] % MOD;
-				if (t[j + k] >= MOD) t[j + k] -= MOD;
-			}
-		}
-		for(int j = 2 * m - 1; j >= m; j--) {
-			for(int k = 1; k <= m; k++) {
-				t[j - k] += 1ll * t[j] * rec[k - 1] % MOD;
-				if (t[j - k] >= MOD) t[j - k] -= MOD;
-			}
-		}
-		t.resize(m);
-		return t;
-	};
-	while(n) {
-		if(n & 1) s = _multiply(s, t);
-		t = _multiply(t, t);
-		n >>= 1;
-	}
-	ull ret = 0;
-	for (int i = 0; i < m; i++) ret += 1ll * s[i] * dp[i] % MOD;
-	return ret % MOD;
+ll getNth(vll rec, vll DP, ll n) {
+    ll m = rec.size();
+    vll s(m), t(m);
+    s[0] = 1;
+    if (m != 1)
+        t[1] = 1;
+    else
+        t[0] = rec[0];
+    auto _multiply = [&rec](vll v, vll w) {
+        ll m = v.size();
+        vll t(2 * m);
+        for (ll j = 0; j < m; j++) {
+            for (ll k = 0; k < m; k++) {
+                t[j + k] += 1ll * v[j] * w[k] % MOD;
+                if (t[j + k] >= MOD) t[j + k] -= MOD;
+            }
+        }
+        for (ll j = 2 * m - 1; j >= m; j--) {
+            for (ll k = 1; k <= m; k++) {
+                t[j - k] += 1ll * t[j] * rec[k - 1] % MOD;
+                if (t[j - k] >= MOD) t[j - k] -= MOD;
+            }
+        }
+        t.resize(m);
+        return t;
+    };
+    while (n) {
+        if (n & 1) s = _multiply(s, t);
+        t = _multiply(t, t);
+        n >>= 1;
+    }
+    ll ret = 0;
+    for (ll i = 0; i < m; i++) ret += 1ll * s[i] * DP[i] % MOD;
+    return ret % MOD;
 }
 
-int guessNthTerm(vint x, ull n) {
-	if(n < x.size()) return x[n];
-	vint v = berlekampMassey(x);
-	if(v.empty()) return 0;
-	return getNth(v, x, n);
+ll guessNthTerm(vll x, ll n) {
+    if (n < x.size()) return x[n];
+    vll v = berlekampMassey(x);
+    if (v.empty()) return 0;
+    return getNth(v, x, n);
 }
